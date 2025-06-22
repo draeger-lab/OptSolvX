@@ -7,7 +7,7 @@ import org.apache.commons.math3.optim.MaxIter;
 import java.util.*;
 
 public class CommonsMathSolver implements ILPSolver {
-    // Interne Felder...
+    // Internal fields
     private int numVars;
     private double[] objectiveCoeffs;
     private boolean maximize;
@@ -43,7 +43,7 @@ public class CommonsMathSolver implements ILPSolver {
 
     @Override
     public LPSolution solve() {
-        // SimplexSolver verwenden, wie im Prototyp.
+        // Using the Simplex solver
         // TODO: Variable bounds einbauen!
         LinearObjectiveFunction objective = new LinearObjectiveFunction(objectiveCoeffs, 0);
         SimplexSolver solver = new SimplexSolver();

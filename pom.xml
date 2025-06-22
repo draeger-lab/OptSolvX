@@ -13,7 +13,6 @@
     </properties>
 
     <dependencies>
-        <!-- Apache Commons Math für LP-Solver -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
@@ -31,7 +30,6 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <!-- Deine Main-Klasse -->
                     <mainClass>org.optsolvx.solver.SolverDemo</mainClass>
                 </configuration>
             </plugin>
