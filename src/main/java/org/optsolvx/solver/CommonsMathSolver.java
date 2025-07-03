@@ -84,12 +84,27 @@ public class CommonsMathSolver implements ILPSolver {
      */
     @Override
     public LPSolution solve() {
-        // TODO: Variable bounds einbauen!
-        // Build the objective function
+        // Add variable bounds as linear constraints: lowerBounds <= x_i <= upperBounds
+        for (int i = 0; i < numVars; i++) {
+            double[] coeff = new double[numVars];
+            coeff[i] = 1.0; // Only x_i in this constraint
+
+            // Lower bound (always added)
+            constraints.add(
+                    new LinearConstraint(coeff, Relationship.GEQ, lowerBounds[i])
+            );
+            // Upper bound (only if finite)
+            if (upperBounds[i] < Double.POSITIVE_INFINITY) {
+                constraints.add(
+                        new LinearConstraint(coeff, Relationship.LEQ, upperBounds[i])
+                );
+            }
+        }
+
+        // Build objective function
         LinearObjectiveFunction objective = new LinearObjectiveFunction(objectiveCoeffs, 0);
 
-        // NoteL Only lower bounds of zero are supported directly via NonNegativeConstraint
-        // If general variable bounds are set, user must add them as explicit constraints
+        // Solve the LP with all constraints
         SimplexSolver solver = new SimplexSolver();
         try {
             PointValuePair result = solver.optimize(
@@ -99,12 +114,12 @@ public class CommonsMathSolver implements ILPSolver {
                     maximize ? GoalType.MAXIMIZE : GoalType.MINIMIZE,
                     new NonNegativeConstraint(true)
             );
-            // Retrieve variable values (order matches model variables)
-            double[] variables = result.getPoint();
+            // Extract variable values and objective
+            double[] vars = result.getPoint();
             double obj = result.getValue();
-            return new LPSolution(variables, obj, true);
+            return new LPSolution(vars, obj, true);
         } catch (Exception e) {
-            // Any exception (infeasible, unbounded, numerical, etc.) is mapped to an infeasible solution
+            // If infeasible or error, return empty solution
             return new LPSolution(new double[numVars], Double.NaN, false);
         }
     }
