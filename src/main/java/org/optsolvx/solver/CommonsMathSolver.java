@@ -4,6 +4,7 @@ import org.apache.commons.math3.optim.linear.*;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.optim.MaxIter;
+import javax.sound.sampled.Line;
 import java.util.*;
 
 /**
@@ -84,33 +85,29 @@ public class CommonsMathSolver implements ILPSolver {
      */
     @Override
     public LPSolution solve() {
-        // Add variable bounds as linear constraints: lowerBounds <= x_i <= upperBounds
+        // Work on a fresh constraint list to avoid duplicates.
+        List<LinearConstraint> allConstraints = new ArrayList<>(constraints);
+
+        // Add variable bounds as constraints
         for (int i = 0; i < numVars; i++) {
             double[] coeff = new double[numVars];
             coeff[i] = 1.0; // Only x_i in this constraint
-
-            // Lower bound (always added)
-            constraints.add(
-                    new LinearConstraint(coeff, Relationship.GEQ, lowerBounds[i])
-            );
-            // Upper bound (only if finite)
+            allConstraints.add(new LinearConstraint(coeff, Relationship.GEQ, lowerBounds[i]));
             if (upperBounds[i] < Double.POSITIVE_INFINITY) {
-                constraints.add(
-                        new LinearConstraint(coeff, Relationship.LEQ, upperBounds[i])
-                );
+                allConstraints.add(new LinearConstraint(coeff, Relationship.LEQ, upperBounds[i]));
             }
         }
 
         // Build objective function
         LinearObjectiveFunction objective = new LinearObjectiveFunction(objectiveCoeffs, 0);
 
-        // Solve the LP with all constraints
+        // Solve the LP with all constraints (including bounds)
         SimplexSolver solver = new SimplexSolver();
         try {
             PointValuePair result = solver.optimize(
                     new MaxIter(100),
                     objective,
-                    new LinearConstraintSet(constraints),
+                    new LinearConstraintSet(allConstraints),
                     maximize ? GoalType.MAXIMIZE : GoalType.MINIMIZE,
                     new NonNegativeConstraint(true)
             );
