@@ -6,12 +6,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test cases adapted and inspired by Apache Commons Math SimplexSolverTest:
+ * https://github.com/apache/commons-math/tree/master
+ */
 public class CommonsMathSolverTest {
-
-    /**
-     * Test cases adapted and inspired by Apache Commons Math SimplexSolverTest:
-     * https://github.com/apache/commons-math/tree/master
-     */
 
     @Test
     void testSimplexMaximization() {
