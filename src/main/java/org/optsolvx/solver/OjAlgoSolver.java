@@ -107,15 +107,17 @@ public class OjAlgoSolver implements ILPSolver {
         // Solve the model
         Optimisation.Result result = maximize ? model.maximise() : model.minimise();
 
+        // Check feasibility
         boolean feasible = result.getState().isFeasible() || result.getState().isOptimal();
         double[] solution = new double[variables.size()];
-        for (int i = 0; i < variables.size(); i++) {
-            // Read the solution for each variable (index-based)
-            solution[i] = result.doubleValue(i); // i is the index
-        }
-        double objVal = result.getValue();
 
-        return new LPSolution(solution, objVal, feasible);
+        // Fill the solution-array, index based in variable sequence
+        for (int i = 0; i < variables.size(); i++) {
+            solution[i] = result.get(i).doubleValue();
+        }
+
+        // Return the solution
+        return new LPSolution(solution, result.getValue(), feasible);
     }
 
     /**
