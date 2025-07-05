@@ -151,7 +151,7 @@ public class CommonsMathSolverTest {
     }
 
     @Test
-    void testEqualityConstraing() {
+    void testEqualityConstraint() {
         // Test: maximize x + y
         // Constraints: x + y = 5, x >= 0, y >= 0
         // Expected solution: x = 5, y = 0 (or x = 0, y = 5), obj = 5
