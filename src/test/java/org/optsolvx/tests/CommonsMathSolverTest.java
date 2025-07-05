@@ -194,25 +194,4 @@ public class CommonsMathSolverTest {
         assertEquals(1.0 / 3.0, sol.variableValues[0], 1e-8, "x should be close to 1/3");
         assertEquals(1.0 / 3.0, sol.objectiveValue, 1e-8, "Objective should be close to 1/3");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
