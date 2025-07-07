@@ -52,7 +52,7 @@ mvn clean install
 ----------------------------
 
 All mathematical LP tests are found in `src/test/java/org/optsolvx/tests/`.
-Biological and advanced tests (e.g., with SBML) will be added in the future under `src/test/java/org/optsolvx/biotests/.
+Biological and advanced tests (e.g., with SBML) will be added in the future under `src/test/java/org/optsolvx/biotests/`.
 
 Run all tests with:
 
