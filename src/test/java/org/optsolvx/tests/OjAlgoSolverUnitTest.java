@@ -16,7 +16,7 @@ public class OjAlgoSolverUnitTest {
     void testSimplexMaximization() {
         // Test: maximize 3x + 5y
         // Constraints: 2x + y <= 6, x + y <= 4
-        // Expected solution: x = 2, y = 2, objective 16
+        // Expected solution: x = 0, y = 4, objective 20
 
         ILPSolver solver = new OjAlgoSolver();
         solver.initializeModel(2);
@@ -38,7 +38,7 @@ public class OjAlgoSolverUnitTest {
         // Constraints: x >= 1, y >= 2
         // Expected solution: x = 1, y = 2, objective = 3
 
-        ILPSolver solver = new CommonsMathSolver();
+        ILPSolver solver = new OjAlgoSolver();
         solver.initializeModel(2);
         solver.setObjective(new double[]{1, 1}, false);
         solver.addConstraint(new double[]{1, 0}, Relationship.GEQ, 1);
