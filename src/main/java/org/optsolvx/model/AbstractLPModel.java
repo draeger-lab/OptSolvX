@@ -4,18 +4,43 @@ import org.apache.commons.math3.optim.linear.Relationship;
 import java.util.*;
 
 /**
- * Generic base model for linear programs. Stores all variables, constraints, and objective.
+ * Generic base class for linear programming models (LP).
+ * Stores all variables, constraints, and the objective function.
+ * Can be used independently of any solver backend.
  */
 public class AbstractLPModel {
 
+    // List of all variables in the model, in insertion order
     private final List<Variable> variables = new ArrayList<>();
+
+    // List of all constraints in the model
     private final List<Constraint> constraints = new ArrayList<>();
+
+    // Maps variable names to their index in the variables list
     private final Map<String, Integer> varNameToIndex = new HashMap<>();
+
+    // Maps constraint names to their index in the constraints list
     private final Map<String, Integer> constraintNameToIndex = new HashMap<>();
+
+    // Coefficients of the objective function: varName -> coefficient
     private final Map<String, Double> objectiveCoefficients = new HashMap<>();
+
+    // If true, model is a maximization problem; if false, minimization
     private boolean maximize = true;
+
+    // True after build() is called; no further changes allowed
     private boolean built = false;
 
+    /**
+     * Adds a new variable to the model.
+     *
+     * @param name unique name of the variable
+     * @param lower lower bound (inclusive)
+     * @param upper upper bound (inclusive)
+     * @return index of the variable in the variables list
+     * @throws IllegalArgumentException if the name already exists
+     * @throws IllegalStateException if the model is already built
+     */
     public int addVariable(String name, double lower, double upper) {
         if (built) throw new IllegalStateException("Model already built.");
         if (varNameToIndex.containsKey(name))
@@ -27,6 +52,17 @@ public class AbstractLPModel {
         return idx;
     }
 
+    /**
+     * Adds a new linear constraint to the model.
+     *
+     * @param name unique name of the constraint
+     * @param coeffs map of variable name to coefficient in the constraint
+     * @param rel type of constraint (LEQ, GEQ, EQ)
+     * @param rhs right-hand side value of the constraint
+     * @return index of the constraint in the constraints list
+     * @throws IllegalArgumentException if the name already exists
+     * @throws IllegalStateException if the model is already built
+     */
     public int addConstraint(String name, Map<String, Double> coeffs, Relationship rel, double rhs) {
         if (built) throw new IllegalStateException("Model already built.");
         if (constraintNameToIndex.containsKey(name))
@@ -38,6 +74,13 @@ public class AbstractLPModel {
         return idx;
     }
 
+    /**
+     * Sets the objective function for the model.
+     *
+     * @param coeffs map of variable name to objective coefficient
+     * @param maximize true if maximization, false if minimization
+     * @throws IllegalStateException if the model is already built
+     */
     public void setObjective(Map<String, Double> coeffs, boolean maximize) {
         if (built) throw new IllegalStateException("Model already built.");
         objectiveCoefficients.clear();
@@ -46,11 +89,13 @@ public class AbstractLPModel {
     }
 
     /**
-     * "Fixes" the model and assigns indices to all variables and constraints.
-     * After this, no further variables/constraints can be added.
+     * Finalizes the model, assigns indices to variables and constraints.
+     * After calling build(), no further variables or constraints can be added.
+     * Must be called before passing the model to any solver backend.
      */
     public void build() {
         if (built) return;
+        // Assign indices for fast lookup by solver backends
         for (int i = 0; i < variables.size(); i++)
             variables.get(i).setIndex(i);
         for (int i = 0; i < constraints.size(); i++)
@@ -58,24 +103,70 @@ public class AbstractLPModel {
         built = true;
     }
 
+    /**
+     * Retrieves a variable by its unique name.
+     *
+     * @param name variable name
+     * @return the Variable object
+     * @throws IllegalArgumentException if not found
+     */
     public Variable getVariable(String name) {
         Integer idx = varNameToIndex.get(name);
         if (idx == null) throw new IllegalArgumentException("No such variable: " + name);
         return variables.get(idx);
     }
 
+    /**
+     * Retrieves a constraint by its unique name.
+     *
+     * @param name constraint name
+     * @return the Constraint object
+     * @throws IllegalArgumentException if not found
+     */
     public Constraint getConstraint(String name) {
         Integer idx = constraintNameToIndex.get(name);
         if (idx == null) throw new IllegalArgumentException("No such constraint: " + name);
         return constraints.get(idx);
     }
 
-    public List<Variable> getVariables() { return Collections.unmodifiableList(variables); }
-    public List<Constraint> getConstraints() { return Collections.unmodifiableList(constraints); }
-    public Map<String, Double> getObjectiveCoefficients() { return Collections.unmodifiableMap(objectiveCoefficients); }
-    public boolean isMaximize() { return maximize; }
-    public boolean isBuilt() { return built; }
+    /**
+     * Returns an unmodifiable list of all variables.
+     */
+    public List<Variable> getVariables() {
+        return Collections.unmodifiableList(variables);
+    }
 
+    /**
+     * Returns an unmodifiable list of all constraints.
+     */
+    public List<Constraint> getConstraints() {
+        return Collections.unmodifiableList(constraints);
+    }
+
+    /**
+     * Returns an unmodifiable map of the objective function coefficients.
+     */
+    public Map<String, Double> getObjectiveCoefficients() {
+        return Collections.unmodifiableMap(objectiveCoefficients);
+    }
+
+    /**
+     * @return true if the problem is maximization, false if minimization
+     */
+    public boolean isMaximize() {
+        return maximize;
+    }
+
+    /**
+     * @return true if build() has been called and the model is finalized
+     */
+    public boolean isBuilt() {
+        return built;
+    }
+
+    /**
+     * Returns a human-readable string of the model for debugging.
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
