@@ -6,53 +6,140 @@ import java.util.Map;
 
 /**
  * Represents a single linear constraint in the LP model.
- * Maps variable names to coefficients, stores relationship and right-hand side.
+ * <p>
+ * Stores a map from variable names to their coefficients,
+ * the constraint relationship (≤, ≥ or =) and the right-hand side value.
+ * Also maintains an optional internal index assigned during model build().
+ * </p>
  */
 public class Constraint {
-    // Unique name of the constraint (user-defined)
+    /** Unique, user-defined name of this constraint. */
     private final String name;
-    // Map from variable name to coefficient in the constraint
+
+    public enum Relation { LEQ, GEQ, EQ }
+
+    /** Immutable map of variable names to their coefficients. */
     private final Map<String, Double> coefficients;
-    // Type of relationship: LEQ (<=), GEQ (>=), EQ (=)
+
+    /** Constraint type: LEQ (≤), GEQ (≥) or EQ (=). */
     private final Relationship relationship;
-    // Right-hand side of the constraint
+
+    private final Relation relation;
+
+    /** Right-hand side value of the constraint. */
     private final double rhs;
-    // Internal index (set by model during build)
+
+    /** Internal index (set by model during build()), or -1 if unset. */
     private int index = -1;
 
+
     /**
-     * Creates a new constraint.
-     * @param name unique constraint name
-     * @param coefficients map of variable names to coefficients
-     * @param relationship constraint type (LEQ, GEQ, EQ)
-     * @param rhs right-hand side value
+     * Constructs a new Constraint.
+     *
+     * @param name         unique name of the constraint
+     * @param coefficients map of variable names to coefficients (will be wrapped immutable)
+     * @param relation     type of constraint (LEQ, GEQ, EQ)
+     * @param rhs          right-hand side constant
      */
-    public Constraint(String name, Map<String, Double> coefficients, Relationship relationship, double rhs) {
+    public Constraint(String name,
+                      Map<String, Double> coefficients,
+                      Relation relation,
+                      double rhs) {
         this.name = name;
-        this.coefficients = Collections.unmodifiableMap(coefficients); // immutable for safety
-        this.relationship = relationship;
+        this.coefficients = Collections.unmodifiableMap(coefficients);
+        this.relation = relation;
+        this.relationship =
+                relation == Relation.LEQ ? Relationship.LEQ :
+                        relation == Relation.GEQ ? Relationship.GEQ :
+                                Relationship.EQ;
         this.rhs = rhs;
     }
 
-    // @return constraint name
-    public String getName() { return name; }
-    // @return coefficients map
-    public Map<String, Double> getCoefficients() { return coefficients; }
-    // @return relationship type
-    public Relationship getRelationship() { return relationship; }
-    // @return right-hand side
-    public double getRhs() { return rhs; }
-    // @return internal index
-    public int getIndex() { return index; }
-    // Sets the internal index (used by model)
-    public void setIndex(int index) { this.index = index; }
+    /**
+     * Returns the user-defined name of this constraint.
+     *
+     * @return constraint name
+     */
+    public String getName() {
+        return name;
+    }
 
     /**
-     * Returns a debug string with constraint details.
+     * Returns the immutable map of coefficients for each variable.
+     *
+     * @return variable→coefficient map
+     */
+    public Map<String, Double> getCoefficients() {
+        return coefficients;
+    }
+
+    /**
+     * Returns the type of this constraint (LEQ, GEQ, EQ).
+     *
+     * @return constraint relationship
+     */
+    public Relationship getRelationship() {
+        return relationship;
+    }
+
+    /**
+     * Returns the right-hand side constant of this constraint.
+     *
+     * @return RHS value
+     */
+    public double getRhs() {
+        return rhs;
+    }
+
+    /**
+     * Returns the internal index assigned by the model builder,
+     * or -1 if not yet assigned.
+     *
+     * @return internal constraint index
+     */
+    public int getIndex() {
+        return index;
+    }
+
+    /**
+     * Returns the internal relation type (LEQ, GEQ, EQ).
+     * @return constraint relation enum
+     */
+    public Relation getRelation() {
+        return relation;
+    }
+
+    /**
+     * Returns the right-hand side value (alternative getter).
+     * @return right-hand side value
+     */
+    public double getRightHandSide() {
+        return rhs;
+    }
+
+    /**
+     * Sets the internal index of this constraint.
+     * <p>
+     * Typically called by {@link AbstractLPModel#build()} once
+     * all constraints have been registered.
+     * </p>
+     *
+     * @param index zero-based index in the solver's constraint array
+     */
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    /**
+     * Returns a debug-friendly string of all constraint details.
+     *
+     * @return formatted constraint summary
      */
     @Override
     public String toString() {
-        return String.format("Constraint{name='%s', relationship=%s, rhs=%f, index=%d, coeffs=%s}",
-                name, relationship, rhs, index, coefficients);
+        return String.format(
+                "Constraint{name='%s', rel=%s, rhs=%s, idx=%d, coeffs=%s}",
+                name, relationship, rhs, index, coefficients
+        );
     }
 }
