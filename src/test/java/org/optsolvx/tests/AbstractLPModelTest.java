@@ -77,4 +77,50 @@ public class AbstractLPModelTest {
         assertEquals(2.0, found.getCoefficients().get("x1"), "Coefficient for x1 mismatch");
         assertEquals(3.0, found.getCoefficients().get("x2"), "Coefficient for x2 mismatch");
     }
+
+    @Test
+    void testDuplicateVariableNameThrowsException() {
+        AbstractLPModel model = new AbstractLPModel();
+        model.addVariable("x1", 0, 10);
+        // Adding a second variable with the same name should throw
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            model.addVariable("x1", 0, 20);
+        });
+        assertTrue(ex.getMessage().toLowerCase().contains("x1"));
+        assertTrue(ex.getMessage().toLowerCase().contains("variable"));
+    }
+
+    @Test
+    void testDuplicateConstraintNameThrowsException() {
+        AbstractLPModel model = new AbstractLPModel();
+        model.addVariable("x1", 0, 10);
+        model.addConstraint("c1", Map.of("x1", 1.0), Constraint.Relation.LEQ, 5.0);
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            model.addConstraint("c1", Map.of("x1", 2.0), Constraint.Relation.GEQ, 3.0);
+        });
+        assertTrue(ex.getMessage().toLowerCase().contains("c1"));
+        assertTrue(ex.getMessage().toLowerCase().contains("constraint"));
+    }
+
+    @Test
+    void testAddVariableAfterBuildThrowsException() {
+        AbstractLPModel model = new AbstractLPModel();
+        model.addVariable("x1", 0, 10);
+        model.build();
+        Exception ex = assertThrows(IllegalStateException.class, () -> {
+            model.addVariable("x2", 0, 5);
+        });
+        assertTrue(ex.getMessage().toLowerCase().contains("built"));
+    }
+
+    @Test
+    void testAddConstraintAfterBuildThrowsException() {
+        AbstractLPModel model = new AbstractLPModel();
+        model.addVariable("x1", 0, 10);
+        model.build();
+        Exception ex = assertThrows(IllegalStateException.class, () -> {
+            model.addConstraint("c1", Map.of("x1", 1.0), Constraint.Relation.LEQ, 5.0);
+        });
+        assertTrue(ex.getMessage().toLowerCase().contains("built"));
+    }
 }
