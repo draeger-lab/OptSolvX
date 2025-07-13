@@ -2,6 +2,7 @@ package org.optsolvx.model;
 
 import org.apache.commons.math3.optim.linear.Relationship;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Generic base class for linear programming models (LP).
@@ -9,6 +10,13 @@ import java.util.*;
  * Can be used independently of any solver backend.
  */
 public class AbstractLPModel {
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractLPModel.class.getName());
+    /**
+     * If true, enables detailed debug logging for model operations.
+     * Default: false (no logging).
+     */
+    private boolean debug = false;
 
     // List of all variables in the model, in insertion order
     private final List<Variable> variables = new ArrayList<>();
@@ -53,8 +61,10 @@ public class AbstractLPModel {
     public int addVariable(String name, double lower, double upper) {
         checkNotBuilt();
         if (varNameToIndex.containsKey(name)) {
+            if (debug) LOGGER.warning("Duplicate variable name: " + name);
             throw new IllegalArgumentException("Variable name already exists: " + name);
         }
+        if (debug) LOGGER.info(String.format("Added variable: %s [%.4f, %.4f]", name, lower, upper));
         Variable var = new Variable(name, lower, upper);
         int idx = variables.size();
         variables.add(var);
@@ -76,8 +86,10 @@ public class AbstractLPModel {
     public Constraint addConstraint(String name, Map<String, Double> coeffs, Constraint.Relation rel, double rhs) {
         checkNotBuilt();
         if (constraintNameToIndex.containsKey(name)) {
+            if (debug) LOGGER.warning("Duplicate constraint name: " + name);
             throw new IllegalArgumentException("Constraint name already exists: " + name);
         }
+        if (debug) LOGGER.info(String.format("Added constraint: %s (%s) rhs=%.4f, vars=%s", name, rel, rhs, coeffs.keySet()));
         Constraint c = new Constraint(name, coeffs, rel, rhs);
         int idx = constraints.size();
         constraints.add(c);
@@ -103,9 +115,13 @@ public class AbstractLPModel {
      * Finalizes the model, assigns indices to variables and constraints.
      * After calling build(), no further variables or constraints can be added.
      * Must be called before passing the model to any solver backend.
+     * <p>
+     * Logs a summary when the model is finalized.
+     * </p>
      */
     public void build() {
         if (built) return;
+        if (debug) LOGGER.info("Building model with " + variables.size() + " variables and " + constraints.size() + " constraints.");
         // Assign indices for fast lookup by solver backends
         for (int i = 0; i < variables.size(); i++) {
             variables.get(i).setIndex(i);
@@ -114,6 +130,7 @@ public class AbstractLPModel {
             constraints.get(i).setIndex(i);
         }
         built = true;
+        if (debug) LOGGER.info("Model finalized. No further modifications allowed.");
     }
 
     /**
@@ -165,6 +182,19 @@ public class AbstractLPModel {
         sb.append("Objective: ").append(objectiveCoefficients)
                 .append(" maximize=").append(maximize).append("\n");
         return sb.toString();
+    }
+
+    /**
+     * Enable or disable debug logging for this model.
+     * Logging is OFF by default.
+     * Call setDebug(true) before model building to activate.
+     *
+     * Example: model.setDebug(true);   // Logging on
+     *          model.setDebug(false);  // Logging off
+     *
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     protected void doBuild() { /* nothing here for base class */ }
