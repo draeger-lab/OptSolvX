@@ -32,6 +32,15 @@ public class AbstractLPModel {
     private boolean built = false;
 
     /**
+     * Throws if model has already been built.
+     */
+    private void checkNotBuilt() {
+        if (built) {
+            throw new IllegalStateException("Model already built; no modifications allowed.");
+        }
+    }
+
+    /**
      * Adds a new variable to the model.
      *
      * @param name unique name of the variable
@@ -42,9 +51,10 @@ public class AbstractLPModel {
      * @throws IllegalStateException if the model is already built
      */
     public int addVariable(String name, double lower, double upper) {
-        if (built) throw new IllegalStateException("Model already built.");
-        if (varNameToIndex.containsKey(name))
+        checkNotBuilt();
+        if (varNameToIndex.containsKey(name)) {
             throw new IllegalArgumentException("Variable name already exists: " + name);
+        }
         Variable var = new Variable(name, lower, upper);
         int idx = variables.size();
         variables.add(var);
@@ -59,19 +69,20 @@ public class AbstractLPModel {
      * @param coeffs map of variable name to coefficient in the constraint
      * @param rel type of constraint (LEQ, GEQ, EQ)
      * @param rhs right-hand side value of the constraint
-     * @return index of the constraint in the constraints list
+     * @return the new Constraint object
      * @throws IllegalArgumentException if the name already exists
      * @throws IllegalStateException if the model is already built
      */
-    public int addConstraint(String name, Map<String, Double> coeffs, Relationship rel, double rhs) {
-        if (built) throw new IllegalStateException("Model already built.");
-        if (constraintNameToIndex.containsKey(name))
+    public Constraint addConstraint(String name, Map<String, Double> coeffs, Constraint.Relation rel, double rhs) {
+        checkNotBuilt();
+        if (constraintNameToIndex.containsKey(name)) {
             throw new IllegalArgumentException("Constraint name already exists: " + name);
+        }
         Constraint c = new Constraint(name, coeffs, rel, rhs);
         int idx = constraints.size();
         constraints.add(c);
         constraintNameToIndex.put(name, idx);
-        return idx;
+        return c;
     }
 
     /**
@@ -82,7 +93,7 @@ public class AbstractLPModel {
      * @throws IllegalStateException if the model is already built
      */
     public void setObjective(Map<String, Double> coeffs, boolean maximize) {
-        if (built) throw new IllegalStateException("Model already built.");
+        checkNotBuilt();
         objectiveCoefficients.clear();
         objectiveCoefficients.putAll(coeffs);
         this.maximize = maximize;
@@ -96,41 +107,17 @@ public class AbstractLPModel {
     public void build() {
         if (built) return;
         // Assign indices for fast lookup by solver backends
-        for (int i = 0; i < variables.size(); i++)
+        for (int i = 0; i < variables.size(); i++) {
             variables.get(i).setIndex(i);
-        for (int i = 0; i < constraints.size(); i++)
+        }
+        for (int i = 0; i < constraints.size(); i++) {
             constraints.get(i).setIndex(i);
+        }
         built = true;
     }
 
     /**
-     * Retrieves a variable by its unique name.
-     *
-     * @param name variable name
-     * @return the Variable object
-     * @throws IllegalArgumentException if not found
-     */
-    public Variable getVariable(String name) {
-        Integer idx = varNameToIndex.get(name);
-        if (idx == null) throw new IllegalArgumentException("No such variable: " + name);
-        return variables.get(idx);
-    }
-
-    /**
-     * Retrieves a constraint by its unique name.
-     *
-     * @param name constraint name
-     * @return the Constraint object
-     * @throws IllegalArgumentException if not found
-     */
-    public Constraint getConstraint(String name) {
-        Integer idx = constraintNameToIndex.get(name);
-        if (idx == null) throw new IllegalArgumentException("No such constraint: " + name);
-        return constraints.get(idx);
-    }
-
-    /**
-     * Returns an unmodifiable list of all variables.
+     * @return an unmodifiable list of all variables
      */
     public List<Variable> getVariables() {
         return Collections.unmodifiableList(variables);
@@ -175,7 +162,10 @@ public class AbstractLPModel {
         for (Variable v : variables) sb.append("  ").append(v).append("\n");
         sb.append("Constraints:\n");
         for (Constraint c : constraints) sb.append("  ").append(c).append("\n");
-        sb.append("Objective: ").append(objectiveCoefficients).append(" maximize=").append(maximize).append("\n");
+        sb.append("Objective: ").append(objectiveCoefficients)
+                .append(" maximize=").append(maximize).append("\n");
         return sb.toString();
     }
+
+    protected void doBuild() { /* nothing here for base class */ }
 }
