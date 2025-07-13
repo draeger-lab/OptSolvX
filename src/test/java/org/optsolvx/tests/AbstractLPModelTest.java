@@ -56,7 +56,6 @@ public class AbstractLPModelTest {
         // prepare two variables and finalize the model
         model.addVariable("x1", 0, 5);
         model.addVariable("x2", 0, 7);
-        model.build();
 
         // add a constraint and rebuild (build() is idempotent)
         Constraint c = model.addConstraint(
