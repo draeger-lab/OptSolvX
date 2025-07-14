@@ -170,15 +170,6 @@ public class AbstractLPModel {
         return built;
     }
 
-    /**
-     * Returns the index of a constraint by its name.
-     *
-     * @param name the name of the constraint
-     * @return index of the constraint in the model
-     * @throws IllegalArgumentException if the name is not found
-     *
-     */
-
 
     /**
      * Returns a human-readable string of the model for debugging.
@@ -200,7 +191,6 @@ public class AbstractLPModel {
      * Enable or disable debug logging for this model.
      * Logging is OFF by default.
      * Call setDebug(true) before model building to activate.
-     *
      * Example: model.setDebug(true);   // Logging on
      *          model.setDebug(false);  // Logging off
      *

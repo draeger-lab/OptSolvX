@@ -33,7 +33,7 @@ public class AbstractLPModelTest {
     @Test
     void testAddVariableAndBuild() {
         // add a variable and verify before/after build()
-        model.addVariable("x1", 0.0, 10.0);
+        model.addVariable("x1", 0.0d, 10.0d);
         assertFalse(model.isBuilt(), "Model should not be built before calling build()");
         model.build();
         assertTrue(model.isBuilt(), "Model should be built after calling build()");
@@ -42,8 +42,8 @@ public class AbstractLPModelTest {
         assertEquals(1, model.getVariables().size(), "Variable count mismatch");
         Variable v = model.getVariables().get(0);
         assertEquals("x1", v.getName(), "Variable name mismatch");
-        assertEquals(0.0, v.getLowerBound(), "Variable lower bound mismatch");
-        assertEquals(10.0, v.getUpperBound(), "Variable upper bound mismatch");
+        assertEquals(0.0d, v.getLowerBound(), "Variable lower bound mismatch");
+        assertEquals(10.0d, v.getUpperBound(), "Variable upper bound mismatch");
 
         // toString() contains variable name
         String repr = model.toString();
@@ -60,9 +60,9 @@ public class AbstractLPModelTest {
         // add a constraint and rebuild (build() is idempotent)
         Constraint c = model.addConstraint(
                 "c1",
-                Map.of("x1", 2.0, "x2", 3.0),
+                Map.of("x1", 2.0d, "x2", 3.0d),
                 Constraint.Relation.LEQ,
-                10.0
+                10.0d
         );
 
         model.build(); // safe to call again
@@ -72,10 +72,10 @@ public class AbstractLPModelTest {
         Constraint found = model.getConstraints().get(0);
         assertEquals("c1", found.getName(), "Constraint name mismatch");
         assertEquals(Constraint.Relation.LEQ, found.getRelation(), "Constraint relation mismatch");
-        assertEquals(10.0, found.getRhs(), "Constraint right-hand side mismatch");
+        assertEquals(10.0d, found.getRhs(), "Constraint right-hand side mismatch");
 
-        assertEquals(2.0, found.getCoefficients().get("x1"), "Coefficient for x1 mismatch");
-        assertEquals(3.0, found.getCoefficients().get("x2"), "Coefficient for x2 mismatch");
+        assertEquals(2.0d, found.getCoefficients().get("x1"), "Coefficient for x1 mismatch");
+        assertEquals(3.0d, found.getCoefficients().get("x2"), "Coefficient for x2 mismatch");
     }
 
     @Test
@@ -94,9 +94,9 @@ public class AbstractLPModelTest {
     void testDuplicateConstraintNameThrowsException() {
         AbstractLPModel model = new AbstractLPModel();
         model.addVariable("x1", 0, 10);
-        model.addConstraint("c1", Map.of("x1", 1.0), Constraint.Relation.LEQ, 5.0);
+        model.addConstraint("c1", Map.of("x1", 1.0d), Constraint.Relation.LEQ, 5.0d);
         Exception ex = assertThrows(IllegalArgumentException.class, () -> {
-            model.addConstraint("c1", Map.of("x1", 2.0), Constraint.Relation.GEQ, 3.0);
+            model.addConstraint("c1", Map.of("x1", 2.0d), Constraint.Relation.GEQ, 3.0d);
         });
         assertTrue(ex.getMessage().toLowerCase().contains("c1"));
         assertTrue(ex.getMessage().toLowerCase().contains("constraint"));
