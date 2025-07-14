@@ -128,10 +128,6 @@ public class AbstractLPModel {
     public void build() {
         if (built) return;
         if (debug) LOGGER.info("Building model with " + variables.size() + " variables and " + constraints.size() + " constraints.");
-        // Assign indices for fast lookup by solver backends
-        for (int i = 0; i < variables.size(); i++) {
-            variables.get(i).setIndex(i);
-        }
         built = true;
         if (debug) LOGGER.info("Model finalized. No further modifications allowed.");
     }
@@ -179,6 +175,30 @@ public class AbstractLPModel {
      */
     public boolean isBuilt() {
         return built;
+    }
+
+    /**
+     * Returns the index of a variable by its name.
+     * @param name the variable name
+     * @return index of the variable in the model
+     * @throws IllegalArgumentException if not found
+     */
+    public int getVariableIndex(String name) {
+        Integer idx = variableIndices.get(name);
+        if (idx == null) throw new IllegalArgumentException("No such variable: " + name);
+        return idx;
+    }
+
+    /**
+     * Returns the index of a constraint by its name.
+     * @param name the constraint name
+     * @return index of the constraint in the model
+     * @throws IllegalArgumentException if not found
+     */
+    public int getConstraintIndex(String name) {
+        Integer idx = constraintIndices.get(name);
+        if (idx == null) throw new IllegalArgumentException("No such constraint: " + name);
+        return idx;
     }
 
 

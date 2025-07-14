@@ -143,4 +143,37 @@ public class AbstractLPModelTest {
         model.build();
         assertTrue(model.isBuilt(), "After calling build() again, built should be true.");
     }
+
+    @Test
+    void testGetVariableIndexReturnsCorrectIndex() {
+        AbstractLPModel model = new AbstractLPModel();
+        model.addVariable("x1", 0, 10);
+        model.addVariable("x2", -5.0d, 5.0d);
+
+        assertEquals(0, model.getVariableIndex("x1"), "Index of x1 should be 0");
+        assertEquals(1, model.getVariableIndex("x2"), "Index of x2 should be 1");
+
+        // Negative test: unknown variable should throw
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            model.getVariableIndex("doesNotExist");
+        });
+        assertTrue(ex.getMessage().toLowerCase().contains("no such variable"));
+    }
+
+    @Test
+    void testGetConstraintIndexReturnsCorrectIndex() {
+        AbstractLPModel model = new AbstractLPModel();
+        model.addVariable("x1", 0, 10);
+        model.addConstraint("c1", Map.of("x1", 1.0d), Constraint.Relation.LEQ, 5.0d);
+        model.addConstraint("c2", Map.of("x1", 2.0d), Constraint.Relation.LEQ, 7.0d);
+
+        assertEquals(0, model.getConstraintIndex("c1"), "Index of c1 should be 0");
+        assertEquals(1, model.getConstraintIndex("c2"), "Index of c2 should be 1");
+
+        // Negative test: unknown constraint should throw
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            model.getConstraintIndex("doesNotExist");
+        });
+        assertTrue(ex.getMessage().toLowerCase().contains("no such constraint"));
+    }
 }
