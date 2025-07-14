@@ -3,6 +3,7 @@ package org.optsolvx.model;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Logger;
+import org.optsolvx.model.OptimizationDirection;
 
 /**
  * Generic base class for linear programming models (LP).
@@ -33,8 +34,8 @@ public class AbstractLPModel {
     // Coefficients of the objective function: varName -> coefficient
     private final Map<String, Double> objectiveCoefficients = new HashMap<>();
 
-    // If true, model is a maximization problem; if false, minimization
-    private boolean maximize = true;
+    // The optimization direction of the model (MAXIMIZE or MINIMIZE). Default ist Maximize.
+    private OptimizationDirection direction = OptimizationDirection.MAXIMIZE;
 
     // True after build() is called; no further changes allowed
     private boolean built = false;
@@ -105,14 +106,14 @@ public class AbstractLPModel {
      * Sets the objective function for the model.
      *
      * @param coeffs map of variable name to objective coefficient
-     * @param maximize true if maximization, false if minimization
+     * @param direction the optimization direction (MAXIMIZE or MINIMIZE)
      * @throws IllegalStateException if the model is already built
      */
-    public void setObjective(Map<String, Double> coeffs, boolean maximize) {
+    public void setObjective(Map<String, Double> coeffs, OptimizationDirection direction) {
         beforeModelChange();
         objectiveCoefficients.clear();
         objectiveCoefficients.putAll(coeffs);
-        this.maximize = maximize;
+        this.direction = direction;
     }
 
     /**
@@ -157,10 +158,20 @@ public class AbstractLPModel {
     }
 
     /**
-     * @return true if the problem is maximization, false if minimization
+     * Returns the current optimization direction (MAXIMIZE or MINIMIZE).
+     * @return the optimization direction
      */
-    public boolean isMaximize() {
-        return maximize;
+    public OptimizationDirection getDirection() {
+        return direction;
+    }
+
+    /**
+     * Sets the optimization direction for this model.
+     * @param direction the optimization direction (MAXIMIZE or MINIMIZE)
+     */
+    public void setDirection(OptimizationDirection direction) {
+        beforeModelChange();
+        this.direction = direction;
     }
 
     /**
@@ -183,7 +194,7 @@ public class AbstractLPModel {
         sb.append("Constraints:\n");
         for (Constraint c : constraints) sb.append("  ").append(c).append("\n");
         sb.append("Objective: ").append(objectiveCoefficients)
-                .append(" maximize=").append(maximize).append("\n");
+                .append(" direction=").append(direction).append("\n");
         return sb.toString();
     }
 
