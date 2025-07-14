@@ -1,7 +1,5 @@
 package org.optsolvx.model;
 
-import org.apache.commons.math3.optim.linear.Relationship;
-
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Logger;
@@ -27,10 +25,10 @@ public class AbstractLPModel {
     private final List<Constraint> constraints = new ArrayList<>();
 
     // Maps variable names to their index in the variables list
-    private final Map<String, Integer> varNameToIndex = new HashMap<>();
+    private final Map<String, Integer> variableIndices = new HashMap<>();
 
     // Maps constraint names to their index in the constraints list
-    private final Map<String, Integer> constraintNameToIndex = new HashMap<>();
+    private final Map<String, Integer> constraintIndices = new HashMap<>();
 
     // Coefficients of the objective function: varName -> coefficient
     private final Map<String, Double> objectiveCoefficients = new HashMap<>();
@@ -66,7 +64,7 @@ public class AbstractLPModel {
      */
     public int addVariable(String name, double lower, double upper) {
         beforeModelChange();
-        if (varNameToIndex.containsKey(name)) {
+        if (variableIndices.containsKey(name)) {
             if (debug) LOGGER.warning("Duplicate variable name: " + name);
             throw new IllegalArgumentException("Variable name already exists: " + name);
         }
@@ -74,7 +72,7 @@ public class AbstractLPModel {
         Variable var = new Variable(name, lower, upper);
         int idx = variables.size();
         variables.add(var);
-        varNameToIndex.put(name, idx);
+        variableIndices.put(name, idx);
         return idx;
     }
 
@@ -91,7 +89,7 @@ public class AbstractLPModel {
      */
     public Constraint addConstraint(String name, Map<String, Double> coeffs, Constraint.Relation rel, double rhs) {
         beforeModelChange();
-        if (constraintNameToIndex.containsKey(name)) {
+        if (constraintIndices.containsKey(name)) {
             if (debug) LOGGER.warning("Duplicate constraint name: " + name);
             throw new IllegalArgumentException("Constraint name already exists: " + name);
         }
@@ -99,7 +97,7 @@ public class AbstractLPModel {
         Constraint c = new Constraint(name, coeffs, rel, rhs);
         int idx = constraints.size();
         constraints.add(c);
-        constraintNameToIndex.put(name, idx);
+        constraintIndices.put(name, idx);
         return c;
     }
 
@@ -132,9 +130,6 @@ public class AbstractLPModel {
         // Assign indices for fast lookup by solver backends
         for (int i = 0; i < variables.size(); i++) {
             variables.get(i).setIndex(i);
-        }
-        for (int i = 0; i < constraints.size(); i++) {
-            constraints.get(i).setIndex(i);
         }
         built = true;
         if (debug) LOGGER.info("Model finalized. No further modifications allowed.");
@@ -174,6 +169,16 @@ public class AbstractLPModel {
     public boolean isBuilt() {
         return built;
     }
+
+    /**
+     * Returns the index of a constraint by its name.
+     *
+     * @param name the name of the constraint
+     * @return index of the constraint in the model
+     * @throws IllegalArgumentException if the name is not found
+     *
+     */
+
 
     /**
      * Returns a human-readable string of the model for debugging.

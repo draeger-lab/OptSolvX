@@ -103,25 +103,27 @@ public class AbstractLPModelTest {
     }
 
     @Test
-    void testAddVariableAfterBuildThrowsException() {
+    void testAddVariableAfterBuildIsAllowedAndResetsBuiltFlag() {
         AbstractLPModel model = new AbstractLPModel();
         model.addVariable("x1", 0, 10);
         model.build();
-        Exception ex = assertThrows(IllegalStateException.class, () -> {
-            model.addVariable("x2", 0, 5);
-        });
-        assertTrue(ex.getMessage().toLowerCase().contains("built"));
+        assertTrue(model.isBuilt(), "Model should be built after build()");
+
+        // Add variable after build (should not throw)
+        model.addVariable("x2", 0, 5);
+        assertFalse(model.isBuilt(), "Adding variable after build should reset built to false");
     }
 
     @Test
-    void testAddConstraintAfterBuildThrowsException() {
+    void testAddConstraintAfterBuildIsAllowedAndResetsBuiltFlag() {
         AbstractLPModel model = new AbstractLPModel();
         model.addVariable("x1", 0, 10);
         model.build();
-        Exception ex = assertThrows(IllegalStateException.class, () -> {
-            model.addConstraint("c1", Map.of("x1", 1.0), Constraint.Relation.LEQ, 5.0);
-        });
-        assertTrue(ex.getMessage().toLowerCase().contains("built"));
+        assertTrue(model.isBuilt(), "Model should be built after build()");
+
+        // Add constraint after build (should not throw)
+        model.addConstraint("c1", Map.of("x1", 1.0d), Constraint.Relation.LEQ, 5.0d);
+        assertFalse(model.isBuilt(), "Adding constraint after build should reset built to false");
     }
 
     @Test

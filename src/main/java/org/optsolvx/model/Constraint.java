@@ -9,7 +9,8 @@ import java.util.Map;
  * <p>
  * Stores a map from variable names to their coefficients,
  * the constraint relationship (≤, ≥ or =) and the right-hand side value.
- * Also maintains an optional internal index assigned during model build().
+ * The index of a constraint is managed by the parent LP model class (AbstractLPModel),
+ * not by this object.
  * </p>
  */
 public class Constraint {
@@ -28,9 +29,6 @@ public class Constraint {
 
     /** Right-hand side value of the constraint. */
     private final double rhs;
-
-    /** Internal index (set by model during build()), or -1 if unset. */
-    private int index = -1;
 
 
     /**
@@ -92,16 +90,6 @@ public class Constraint {
     }
 
     /**
-     * Returns the internal index assigned by the model builder,
-     * or -1 if not yet assigned.
-     *
-     * @return internal constraint index
-     */
-    public int getIndex() {
-        return index;
-    }
-
-    /**
      * Returns the internal relation type (LEQ, GEQ, EQ).
      * @return constraint relation enum
      */
@@ -118,19 +106,6 @@ public class Constraint {
     }
 
     /**
-     * Sets the internal index of this constraint.
-     * <p>
-     * Typically called by {@link AbstractLPModel#build()} once
-     * all constraints have been registered.
-     * </p>
-     *
-     * @param index zero-based index in the solver's constraint array
-     */
-    public void setIndex(int index) {
-        this.index = index;
-    }
-
-    /**
      * Returns a debug-friendly string of all constraint details.
      *
      * @return formatted constraint summary
@@ -138,8 +113,8 @@ public class Constraint {
     @Override
     public String toString() {
         return String.format(
-                "Constraint{name='%s', rel=%s, rhs=%s, idx=%d, coeffs=%s}",
-                name, relationship, rhs, index, coefficients
+                "Constraint{name='%s', rel=%s, rhs=%s, coeffs=%s}",
+                name, relationship, rhs, coefficients
         );
     }
 }
