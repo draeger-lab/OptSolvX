@@ -1,6 +1,8 @@
 package org.optsolvx.model;
 
 import org.apache.commons.math3.optim.linear.Relationship;
+
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -39,12 +41,16 @@ public class AbstractLPModel {
     // True after build() is called; no further changes allowed
     private boolean built = false;
 
-    /**
-     * Throws if model has already been built.
-     */
-    private void checkNotBuilt() {
+    private void beforeModelChange() {
         if (built) {
-            throw new IllegalStateException("Model already built; no modifications allowed.");
+            built = false;
+            if (debug) LOGGER.warning(
+                    MessageFormat.format(
+                            "{0}: Model was changed after build(); 'built' status reset. " +
+                                    "Please call build() again before solving.",
+                            getClass().getSimpleName()
+                    )
+            );
         }
     }
 
@@ -59,7 +65,7 @@ public class AbstractLPModel {
      * @throws IllegalStateException if the model is already built
      */
     public int addVariable(String name, double lower, double upper) {
-        checkNotBuilt();
+        beforeModelChange();
         if (varNameToIndex.containsKey(name)) {
             if (debug) LOGGER.warning("Duplicate variable name: " + name);
             throw new IllegalArgumentException("Variable name already exists: " + name);
@@ -84,7 +90,7 @@ public class AbstractLPModel {
      * @throws IllegalStateException if the model is already built
      */
     public Constraint addConstraint(String name, Map<String, Double> coeffs, Constraint.Relation rel, double rhs) {
-        checkNotBuilt();
+        beforeModelChange();
         if (constraintNameToIndex.containsKey(name)) {
             if (debug) LOGGER.warning("Duplicate constraint name: " + name);
             throw new IllegalArgumentException("Constraint name already exists: " + name);
@@ -105,7 +111,7 @@ public class AbstractLPModel {
      * @throws IllegalStateException if the model is already built
      */
     public void setObjective(Map<String, Double> coeffs, boolean maximize) {
-        checkNotBuilt();
+        beforeModelChange();
         objectiveCoefficients.clear();
         objectiveCoefficients.putAll(coeffs);
         this.maximize = maximize;
@@ -113,8 +119,9 @@ public class AbstractLPModel {
 
     /**
      * Finalizes the model, assigns indices to variables and constraints.
-     * After calling build(), no further variables or constraints can be added.
-     * Must be called before passing the model to any solver backend.
+     * After calling build(), no further variables or constraints can be added
+     * until the model is changed again. If the model is changed after build(),
+     * the 'built' flag will be reset and build() must be called again before solving.
      * <p>
      * Logs a summary when the model is finalized.
      * </p>

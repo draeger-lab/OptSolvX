@@ -123,4 +123,22 @@ public class AbstractLPModelTest {
         });
         assertTrue(ex.getMessage().toLowerCase().contains("built"));
     }
+
+    @Test
+    void testBuiltFlagResetsAfterModelChange() {
+        AbstractLPModel model = new AbstractLPModel();
+
+        //Step 1: Add a variable and build the model
+        model.addVariable("x1", 0, 10);
+        model.build();
+        assertTrue(model.isBuilt(), "After build() was called, built should be true.");
+
+        // Step 2: Add another variable after build() (should reset built to false)
+        model.addVariable("x2", 0, 5);
+        assertFalse(model.isBuilt(), "After modifying the model, built should be false");
+
+        // Step 3: Call build() again
+        model.build();
+        assertTrue(model.isBuilt(), "After calling build() again, built should be true.");
+    }
 }
