@@ -145,18 +145,45 @@ public class AbstractLPModel {
     }
 
     /**
-     * @return an unmodifiable list of all variables
+     * Returns the internal list of variables.
+     * Modifications to this list affect the model directly.
+     * @return the variables list
      */
-    public List<Variable> getVariables() {
-        return Collections.unmodifiableList(variables);
+    public List<Variable> getVariables() { return variables; }
+
+    /**
+     * Returns the internal list of constraints.
+     * Modifications to this list affect the model directly.
+     * @return the constraint list
+     */
+    public List<Constraint> getConstraints() { return constraints; }
+
+    /**
+     * Returns the variable object with the specified name.
+     * @param name the variable name
+     * @return the Variable object
+     * @throws IllegalArgumentException if not found
+     */
+    public Variable getVariable(String name) {
+        Integer idx = variableIndices.get(name);
+        if (idx == null) throw new IllegalArgumentException("No such variable: " + name);
+            return variables.get(idx);
+
     }
 
     /**
-     * Returns an unmodifiable list of all constraints.
+     * Returns the constraint object with the specified name.
+     * @param name the constraint name
+     * @return the Constraint object
+     * @throws IllegalArgumentException if not found
      */
-    public List<Constraint> getConstraints() {
-        return Collections.unmodifiableList(constraints);
+    public Constraint getConstraint(String name) {
+        Integer idx = constraintIndices.get(name);
+        if (idx == null) throw new IllegalArgumentException("No such constraint: " + name);
+        return constraints.get(idx);
     }
+
+
 
     /**
      * Returns an unmodifiable map of the objective function coefficients.
