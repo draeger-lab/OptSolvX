@@ -1,6 +1,6 @@
 package org.optsolvx.model;
 
-import java.text.MessageFormat;
+import static java.text.MessageFormat.format;
 import java.util.*;
 import java.util.logging.Logger;
 import org.optsolvx.model.OptimizationDirection;
@@ -44,7 +44,7 @@ public class AbstractLPModel {
         if (built) {
             built = false;
             if (debug) LOGGER.warning(
-                    MessageFormat.format(
+                    format(
                             "{0}: Model was changed after build(); 'built' status reset. " +
                                     "Please call build() again before solving.",
                             getClass().getSimpleName()
@@ -69,7 +69,7 @@ public class AbstractLPModel {
             if (debug) LOGGER.warning("Duplicate variable name: " + name);
             throw new IllegalArgumentException("Variable name already exists: " + name);
         }
-        if (debug) LOGGER.info(MessageFormat.format(
+        if (debug) LOGGER.info(format(
                 "{0}: Added variable: {1} [{2,number,0.####}, {3,number,0.####}]",
                 getClass().getSimpleName(), name, lower, upper
         ));
@@ -97,7 +97,7 @@ public class AbstractLPModel {
             if (debug) LOGGER.warning("Duplicate constraint name: " + name);
             throw new IllegalArgumentException("Constraint name already exists: " + name);
         }
-        if (debug) LOGGER.info(MessageFormat.format(
+        if (debug) LOGGER.info(format(
                 "{0}: Added constraint {1} ({2}) rhs={3, number,0.####}, vars={4}",
                 getClass().getSimpleName(), name, rel, rhs, coeffs.keySet()
         ));
@@ -133,12 +133,12 @@ public class AbstractLPModel {
      */
     public void build() {
         if (built) return;
-        if (debug) LOGGER.info(MessageFormat.format(
+        if (debug) LOGGER.info(format(
                 "{0}: Building model with {1} variables and {2} constraints.",
                 getClass().getSimpleName(), variables.size(), constraints.size()
         ));
         built = true;
-        if (debug) LOGGER.info(MessageFormat.format(
+        if (debug) LOGGER.info(format(
                 "{0}: Model finalized. No further modifications allowed.",
                 getClass().getSimpleName()
         ));
