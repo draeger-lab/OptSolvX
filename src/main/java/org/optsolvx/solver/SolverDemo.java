@@ -1,7 +1,6 @@
-import org.optsolvx.model.*;
-import org.optsolvx.solver.CommonsMathSolver;
-import org.optsolvx.solver.LPSolution;
+package org.optsolvx.solver;
 
+import org.optsolvx.model.*;
 import java.util.Map;
 
 public class SolverDemo {
