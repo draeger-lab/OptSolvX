@@ -8,7 +8,7 @@ import org.optsolvx.model.*;
 
 import java.util.*;
 
-public class CommonsMathSolver {
+public class CommonsMathSolver implements LPSolverAdapter {
 
     public LPSolution solve(AbstractLPModel model) {
         if (model == null || !model.isBuilt()) {
@@ -82,16 +82,12 @@ public class CommonsMathSolver {
     }
 
     private Relationship toCommonsMathRelationship(Constraint.Relation relationship) {
-        switch (relationship) {
-            case LEQ:
-                return Relationship.LEQ;
-            case GEQ:
-                return Relationship.GEQ;
-            case EQ:
-                return Relationship.EQ;
-            default:
-                throw new IllegalArgumentException("Unknown relationship: " + relationship);
-        }
+        return switch (relationship) {
+            case LEQ -> Relationship.LEQ;
+            case GEQ -> Relationship.GEQ;
+            case EQ -> Relationship.EQ;
+            default -> throw new IllegalArgumentException("Unknown relationship: " + relationship);
+        };
     }
 
 
