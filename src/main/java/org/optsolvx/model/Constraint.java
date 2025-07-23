@@ -97,8 +97,8 @@ public class Constraint {
     @Override
     public String toString() {
         return String.format(
-                "Constraint{name='%s', rel=%s, rhs=%s, coeffs=%s}",
-                name, relation, rhs, coefficients
+                "%s{name='%s', rel=%s, rhs=%s, coeffs=%s}",
+                getClass().getSimpleName(), name, relation, rhs, coefficients
         );
     }
 }

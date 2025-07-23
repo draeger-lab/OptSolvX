@@ -37,6 +37,8 @@ public class Variable {
      */
     @Override
     public String toString() {
-        return String.format("Variable{name='%s', [%f, %f]}", name, lowerBound, upperBound);
+        return String.format("%s{name='%s', [%f, %f]}",
+                getClass().getSimpleName(), name, lowerBound, upperBound
+        );
     }
 }
