@@ -22,9 +22,6 @@ public class Constraint {
     /** Immutable map of variable names to their coefficients. */
     private final Map<String, Double> coefficients;
 
-    /** Constraint type: LEQ (≤), GEQ (≥) or EQ (=). */
-    private final Relationship relationship;
-
     private final Relation relation;
 
     /** Right-hand side value of the constraint. */
@@ -46,10 +43,6 @@ public class Constraint {
         this.name = name;
         this.coefficients = Collections.unmodifiableMap(coefficients);
         this.relation = relation;
-        this.relationship =
-                relation == Relation.LEQ ? Relationship.LEQ :
-                        relation == Relation.GEQ ? Relationship.GEQ :
-                                Relationship.EQ;
         this.rhs = rhs;
     }
 
@@ -69,15 +62,6 @@ public class Constraint {
      */
     public Map<String, Double> getCoefficients() {
         return coefficients;
-    }
-
-    /**
-     * Returns the type of this constraint (LEQ, GEQ, EQ).
-     *
-     * @return constraint relationship
-     */
-    public Relationship getRelationship() {
-        return relationship;
     }
 
     /**
@@ -114,7 +98,7 @@ public class Constraint {
     public String toString() {
         return String.format(
                 "Constraint{name='%s', rel=%s, rhs=%s, coeffs=%s}",
-                name, relationship, rhs, coefficients
+                name, relation, rhs, coefficients
         );
     }
 }
