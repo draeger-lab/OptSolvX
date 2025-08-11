@@ -103,4 +103,4 @@ model.setDebug(true); // call before model.build()
 Contributions and feedback are welcome! Please open issues or pull requests on GitHub.
 
 ---
-*State of this README as of: 07.07.25*
+*State of this README as of: 10.08.25*
