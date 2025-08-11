@@ -10,6 +10,10 @@ Place for licenses, java links and passings. Inspired and copied from SBSCL and 
 
 -->
 
+[![License (MIT)](https://img.shields.io/badge/license-MIT-blue.svg?style=plastic)](http://opensource.org/licenses/MIT)
+![Code Size](https://img.shields.io/github/languages/code-size/draeger-lab/OptSolvX.svg?style=plastic)
+![Downloads of all releases](https://img.shields.io/github/downloads/draeger-lab/OptSolvX/total.svg?style=plastic)
+
 OptSolvX is a flexible Java library for solving linear programming (LP) problems with multiple interchangeable solver backends.  
 It provides a clean, test-driven API for building, comparing and extending LP solvers.  
 OptSolvX is intended for applications in mathematics, research, and systems biology.
