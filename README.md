@@ -71,6 +71,31 @@ If you use JSBML, we encourage you to subscribe to or monitor via RSS the [jsbml
 
 -->
 
+► Quick Demo
+----------------------------
+
+Run the built-in demo (max x + y with two constraints) using the Commons Math backend.
+
+**From IDE:** run `org.optsolvx.solver.SolverDemo`.
+
+**From Maven (CLI):**
+```bash
+mvn -q exec:java
+# If needed:
+# mvn -q -DskipTests exec:java -Dexec.mainClass=org.optsolvx.solver.SolverDemo
+```
+
+Expected Output:
+```bash
+Variable values: {x=3.0, y=0.5}
+Objective: 3.5
+Feasible:  true
+```
+
+***Optional debug:*** enable verbose model logging in the demo:
+```java
+model.setDebug(true); // call before model.build()
+```
 
 ► Contribution
 ----------------------------
@@ -78,4 +103,4 @@ If you use JSBML, we encourage you to subscribe to or monitor via RSS the [jsbml
 Contributions and feedback are welcome! Please open issues or pull requests on GitHub.
 
 ---
-*State of this README as of: 07.07.25*
+*State of this README as of: 10.08.25*
