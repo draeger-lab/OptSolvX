@@ -44,6 +44,13 @@
                     <mainClass>org.optsolvx.solver.SolverDemo</mainClass>
                 </configuration>
             </plugin>
+
+            <!-- ensures JUnit 5 works consistently -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
         </plugins>
     </build>
 
