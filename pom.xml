@@ -7,8 +7,10 @@
     <groupId>org.optsolvx</groupId>
     <artifactId>optsolvx</artifactId>
     <version>0.1.0-SNAPSHOT</version>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Default: build with Java 22 -->
         <maven.compiler.release>22</maven.compiler.release>
     </properties>
 
@@ -36,6 +38,17 @@
 
     <build>
         <plugins>
+            <!-- Ensure explicit compiler setup (uses <maven.compiler.release>) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <!-- Build main artifact with Java 22 by default -->
+                    <release>${maven.compiler.release}</release>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -45,7 +58,7 @@
                 </configuration>
             </plugin>
 
-            <!-- ensures JUnit 5 works consistently -->
+            <!-- JUnit 5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -53,5 +66,59 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- Profile to attach an additional JAR compiled for Java 8 as classifier "jdk8" -->
+    <profiles>
+        <profile>
+            <id>compat8</id>
+            <properties>
+                <!-- Skip tests in this profile to avoid Java 9+ APIs in tests -->
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Second compile of main sources to a separate output dir with release 8 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.13.0</version>
+                        <executions>
+                            <execution>
+                                <id>compile-compat8</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <release>8</release>
+                                    <outputDirectory>${project.build.directory}/classes-jdk8</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Package the Java 8 classes as an attached JAR with classifier "jdk8" -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>jar-compat8</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classesDirectory>${project.build.directory}/classes-jdk8</classesDirectory>
+                                    <classifier>jdk8</classifier>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
