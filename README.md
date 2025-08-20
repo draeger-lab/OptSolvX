@@ -18,41 +18,55 @@ OptSolvX is intended for applications in mathematics, research, and systems biol
 ► Features
 ----------------------------
 
-- Unified LP solver interface (`ILPSolver`)
-- Pluggable solver adapters: `CommonsMathSolver`, `OjAlgoSolver`, and more coming soon
-- Test-driven (JUnit5) development
-- Easily extendable with new solver backends
-- Example/test coverage for common LP scenarios
+- Solver-agnostic LP core: `AbstractLPModel`, `Variable`, `Constraint`, `OptimizationDirection`, `LPSolution`
+- Unified solver adapter interface: `LPSolverAdapter`
+- Pluggable backends: CommonsMathSolver (ready), OjAlgoSolver (planned)
+- Test-driven development with JUnit 5
+- Clean logging & validation (build checks, bounds, relations)
+- Easy to extend with custom backends; demo included
 
 
 ► Status
 ----------------------------
 
-- LP modeling and solving (maximize/minimize)
-- Constraints and variable bounds supported
-- Ready-to-use with Commons Math and OjAlgo adapters
-
-<!-- 
-- CI (GitHub Actions) is set up for all builds and tests
--->
+- LP modeling & solving: maximize/minimize, EQ/LEQ/GEQ constraints, variable bounds, build() workflow
+- Backends: Commons Math adapter ready; ojAlgo adapter planned
+- Builds: Java 22 by default; optional Java 8 bytecode via compat8 profile (classifier jdk8)
 
 
 ► Installation
 ----------------------------
 
-**Requirements:** Java 22+, Maven 3.9+
+Requirements: Maven ≥ 3.9, Java 22 (default). 
+
+Optional: build an additional Java 8 bytecode artifact via profile compat8.
 
 ```
 git clone https://github.com/draeger-lab/OptSolvX.git
 cd OptSolvX
+```
+
+Default (Java 22) - installs to local Maven repo
+```
 mvn clean install
 ```
+
+Optional: Java 8 bytecode JAR (classifier jdk8)
+```
+mvn -P compat8 -DskipTests clean package
+```
+
+Artifacts
+- target/optsolvx-<version>.jar - Java 22 (default)
+- target/optsolvx-<version>-jdk8.jar - Java 8 bytecode (compatibility)
+
 
 ► Testing
 ----------------------------
 
-All mathematical LP tests are found in `src/test/java/org/optsolvx/tests/`.
-Biological and advanced tests (e.g., with SBML) will be added in the future under `src/test/java/org/optsolvx/biotests/`.
+All mathematical LP tests are found in `src/test/java/org/optsolvx/tests/lp`.
+
+Biological and advanced tests (e.g., with SBML) will be added in the future under `src/test/java/org/optsolvx/bio`.
 
 Run all tests with:
 
@@ -103,4 +117,4 @@ model.setDebug(true); // call before model.build()
 Contributions and feedback are welcome! Please open issues or pull requests on GitHub.
 
 ---
-*State of this README as of: 10.08.25*
+*State of this README as of: 20.08.25*
