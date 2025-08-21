@@ -1,94 +1,149 @@
 package org.optsolvx.solver;
 
-import org.apache.commons.math3.optim.linear.*;
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
+import org.optsolvx.model.AbstractLPModel;
+import org.optsolvx.model.Variable;
+import org.optsolvx.model.Constraint;
+import org.optsolvx.model.Constraint.Relation;
+import org.optsolvx.model.OptimizationDirection;
+
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.optim.MaxIter;
-import org.optsolvx.model.*;
+import org.apache.commons.math3.optim.linear.LinearConstraint;
+import org.apache.commons.math3.optim.linear.LinearConstraintSet;
+import org.apache.commons.math3.optim.linear.LinearObjectiveFunction;
+import org.apache.commons.math3.optim.linear.NonNegativeConstraint;
+import org.apache.commons.math3.optim.linear.Relationship;
+import org.apache.commons.math3.optim.linear.SimplexSolver;
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
+import org.apache.commons.math3.optim.univariate.SearchInterval;
+import org.apache.commons.math3.exception.MathIllegalStateException;
+import org.apache.commons.math3.optim.OptimizationData;
 
 import java.util.*;
 
-public class CommonsMathSolver implements LPSolverAdapter {
+/**
+ * Commons Math 3 backend for OptSolvX.
+ *
+ * Implementation notes:
+ * - Equality constraints are represented as two inequalities (<= and >=).
+ * - Variable bounds are added explicitly as linear constraints (lb/ub).
+ * - NonNegativeConstraint(false) is required to allow negative fluxes.
+ * - If the problem is infeasible or unbounded, the solution is marked infeasible
+ *   and the objective is reported as NaN to mirror legacy behavior.
+ */
+public final class CommonsMathSolver implements LPSolverAdapter {
 
+    private static final int MAX_ITERS = 10_000;
+
+    @Override
     public LPSolution solve(AbstractLPModel model) {
-        if (model == null || !model.isBuilt()) {
-            throw new IllegalArgumentException("Model is null or not built.");
+        if (model == null) {
+            throw new IllegalArgumentException("Model must not be null.");
+        }
+        // Ensure model is frozen before solving.
+        if (!model.isBuilt()) {
+            model.build();
         }
 
-        List<Variable> variables = model.getVariables();
-        int numVariables = variables.size();
+        final List<Variable> vars = model.getVariables();
+        final int n = vars.size();
 
-        // Objective coefficients, mapped by variable index
-        double[] objectiveCoefficients = new double[numVariables];
-        Map<String, Double> ojectiveCoefficientsMap = model.getObjectiveCoefficients();
-        for (int variableIndex = 0; variableIndex < numVariables; variableIndex++) {
-            String name = variables.get(variableIndex).getName();
-            objectiveCoefficients[variableIndex] = ojectiveCoefficientsMap.getOrDefault(name, 0.0d);
+        // ----- Objective -----
+        final double[] objective = new double[n];
+        for (Map.Entry<String, Double> e : model.getObjectiveCoefficients().entrySet()) {
+            final int idx = model.getVariableIndex(e.getKey());
+            objective[idx] = e.getValue();
         }
-
-        // Bounds
-        double[] lowerBounds = new double[numVariables];
-        double[] upperBounds = new double[numVariables];
-        for (int variableIndex = 0; variableIndex < numVariables; variableIndex++) {
-            lowerBounds[variableIndex] = variables.get(variableIndex).getLowerBound();
-            upperBounds[variableIndex] = variables.get(variableIndex).getUpperBound();
-        }
-
-        // Constraints
-        List<LinearConstraint> allConstraints = new ArrayList<>();
-        for (Constraint constraint : model.getConstraints()) {
-            double[] coefficients = new double[numVariables];
-            for (Map.Entry<String, Double> entry : constraint.getCoefficients().entrySet()) {
-                int variableIndex = model.getVariableIndex(entry.getKey());
-                coefficients[variableIndex] = entry.getValue();
-            }
-            Relationship relationship = toCommonsMathRelationship(constraint.getRelation());
-            allConstraints.add(new LinearConstraint(coefficients, relationship, constraint.getRhs()));
-        }
-
-        // Variable bounds as constraints
-        for (int i = 0; i < numVariables; i++) {
-            double[] coefficients = new double[numVariables];
-            coefficients[i] = 1.0d;
-            allConstraints.add(new LinearConstraint(coefficients, Relationship.GEQ, lowerBounds[i]));
-            if (upperBounds[i] < Double.POSITIVE_INFINITY) {
-                allConstraints.add(new LinearConstraint(coefficients, Relationship.LEQ, upperBounds[i]));
-            }
-        }
-
-        LinearObjectiveFunction objective = new LinearObjectiveFunction(objectiveCoefficients, 0);
-        SimplexSolver solver = new SimplexSolver();
-        GoalType goalType = (model.getDirection() == OptimizationDirection.MAXIMIZE)
+        final LinearObjectiveFunction f = new LinearObjectiveFunction(objective, 0.0);
+        final GoalType goal = (model.getDirection() == OptimizationDirection.MAXIMIZE)
                 ? GoalType.MAXIMIZE : GoalType.MINIMIZE;
 
-        try {
-            PointValuePair result = solver.optimize(
-                    new MaxIter(100),
-                    objective,
-                    new LinearConstraintSet(allConstraints),
-                    goalType,
-                    new NonNegativeConstraint(true)
-            );
-            double[] solutionVariables = result.getPoint();
-            Map<String, Double> variableMap = new LinkedHashMap<>();
-            for (int i = 0; i < numVariables; i++) {
-                variableMap.put(variables.get(i).getName(), solutionVariables[i]);
+        // ----- Constraints from model -----
+        final Collection<LinearConstraint> cons = new ArrayList<>();
+
+        // Linear constraints (EQ → two inequalities)
+        for (Constraint c : model.getConstraints()) {
+            final double[] a = new double[n];
+            for (Map.Entry<String, Double> term : c.getCoefficients().entrySet()) {
+                a[model.getVariableIndex(term.getKey())] = term.getValue();
             }
-            double objectiveValue = result.getValue();
-            return new LPSolution(variableMap, objectiveValue, true);
-        } catch (Exception e) {
-            return new LPSolution(Collections.emptyMap(), Double.NaN, false);
+            final double rhs = c.getRhs();
+            final Relation rel = c.getRelation();
+            switch (rel) {
+                case LEQ:
+                    cons.add(new LinearConstraint(a, Relationship.LEQ, rhs));
+                    break;
+                case GEQ:
+                    cons.add(new LinearConstraint(a, Relationship.GEQ, rhs));
+                    break;
+                case EQ:
+                    cons.add(new LinearConstraint(a, Relationship.LEQ, rhs));
+                    cons.add(new LinearConstraint(a, Relationship.GEQ, rhs));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown relation: " + rel);
+            }
         }
-    }
 
-    // Java 8-compatible switch (no switch expressions)
-    private Relationship toCommonsMathRelationship(Constraint.Relation relationship) {
-        switch (relationship) {
-            case LEQ: return Relationship.LEQ;
-            case GEQ: return Relationship.GEQ;
-            case EQ:  return Relationship.EQ;
-            default: throw new IllegalArgumentException("Unknown relationship: " + relationship);
+        // Variable bounds (as constraints)
+        for (int i = 0; i < n; i++) {
+            final Variable v = vars.get(i);
+            final double lb = v.getLowerBound();
+            final double ub = v.getUpperBound();
+
+            // x_i >= lb
+            if (!Double.isInfinite(lb)) {
+                final double[] a = new double[n];
+                a[i] = 1.0;
+                cons.add(new LinearConstraint(a, Relationship.GEQ, lb));
+            }
+            // x_i <= ub
+            if (!Double.isInfinite(ub)) {
+                final double[] a = new double[n];
+                a[i] = 1.0;
+                cons.add(new LinearConstraint(a, Relationship.LEQ, ub));
+            }
         }
-    }
 
+        // ----- Optimize -----
+        final SimplexSolver solver = new SimplexSolver();
+        PointValuePair pvp;
+        boolean feasible = true;
+        double objectiveValue = Double.NaN;
+        double[] point = new double[n];
+
+        try {
+            pvp = solver.optimize(
+                    new MaxIter(MAX_ITERS),
+                    f,
+                    new LinearConstraintSet(cons),
+                    goal,
+                    // IMPORTANT: allow negative values (fluxes can be negative)
+                    new NonNegativeConstraint(false)
+            );
+            if (pvp == null || pvp.getPoint() == null) {
+                feasible = false;
+            } else {
+                point = pvp.getPoint();
+                // Guard: some solvers can return shorter arrays in degenerate cases
+                if (point.length < n) {
+                    point = Arrays.copyOf(point, n);
+                }
+                objectiveValue = pvp.getValue();
+            }
+        } catch (Exception ex) {
+            // Infeasible/unbounded/iteration limit → mark infeasible, keep NaN objective
+            feasible = false;
+        }
+
+        // Build name → value map in declared variable order
+        final Map<String, Double> values = new LinkedHashMap<String, Double>(n);
+        for (int i = 0; i < n; i++) {
+            final String name = vars.get(i).getName();
+            final double val = (i < point.length) ? point[i] : 0.0;
+            values.put(name, val);
+        }
+
+        return new LPSolution(values, objectiveValue, feasible);
+    }
 }
