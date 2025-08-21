@@ -77,6 +77,7 @@
             </properties>
             <build>
                 <plugins>
+
                     <!-- Second compile of main sources to a separate output dir with release 8 -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -92,6 +93,33 @@
                                 <configuration>
                                     <release>8</release>
                                     <outputDirectory>${project.build.directory}/classes-jdk8</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Ensure META-INF/services files are also present in the Java 8 output -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-services-compat8</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/classes-jdk8</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>src/main/resources</directory>
+                                            <includes>
+                                                <include>META-INF/services/**</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>
@@ -116,6 +144,7 @@
                             </execution>
                         </executions>
                     </plugin>
+
                 </plugins>
             </build>
         </profile>
