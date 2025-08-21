@@ -81,14 +81,14 @@ public class CommonsMathSolver implements LPSolverAdapter {
         }
     }
 
+    // Java 8-compatible switch (no switch expressions)
     private Relationship toCommonsMathRelationship(Constraint.Relation relationship) {
-        return switch (relationship) {
-            case LEQ -> Relationship.LEQ;
-            case GEQ -> Relationship.GEQ;
-            case EQ -> Relationship.EQ;
-            default -> throw new IllegalArgumentException("Unknown relationship: " + relationship);
-        };
+        switch (relationship) {
+            case LEQ: return Relationship.LEQ;
+            case GEQ: return Relationship.GEQ;
+            case EQ:  return Relationship.EQ;
+            default: throw new IllegalArgumentException("Unknown relationship: " + relationship);
+        }
     }
-
 
 }
