@@ -66,6 +66,16 @@ Artifacts
 - target/optsolvx-<version>.jar - Java 22 (default)
 - target/optsolvx-<version>-jdk8.jar - Java 8 bytecode (compatibility)
 
+► Java Version
+----------------------------
+
+OptSolvX requires **Java 22** to build and run.  
+The build enforces this via the Maven Enforcer plugin.
+
+If a different JDK is active, the build will fail early with a clear message.  
+Optional: use the `compat8` profile to produce a Java 8 bytecode JAR.
+
+
 ► Testing
 ----------------------------
 
