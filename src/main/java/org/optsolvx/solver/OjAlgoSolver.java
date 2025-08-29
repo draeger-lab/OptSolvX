@@ -14,7 +14,6 @@ import java.util.Map;
 
 /**
  * ojAlgo backend for OptSolvX.
- *
  * Builds an ExpressionsBasedModel with variables/bounds/linear constraints.
  * Equality -> level(rhs),  <= -> upper(rhs),  >= -> lower(rhs).
  * We always call minimise(); for MAX we flip objective weight to -1.
@@ -52,10 +51,17 @@ public final class OjAlgoSolver implements LPSolverAdapter {
                 if (ov != null) ex.set(ov, term.getValue());
             }
             switch (c.getRelation()) {
-                case LEQ: ex.upper(c.getRhs()); break;
-                case GEQ: ex.lower(c.getRhs()); break;
-                case EQ:  ex.level(c.getRhs()); break;
-                default: throw new IllegalArgumentException("Unknown relation: " + c.getRelation());
+                case LEQ:
+                    ex.upper(c.getRhs());
+                    break;
+                case GEQ:
+                    ex.lower(c.getRhs());
+                    break;
+                case EQ:
+                    ex.level(c.getRhs());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown relation: " + c.getRelation());
             }
         }
 
@@ -73,7 +79,7 @@ public final class OjAlgoSolver implements LPSolverAdapter {
         Optimisation.Result result;
         try {
             result = ebm.minimise(); // weight handles MAX
-            feasible = result != null && result.getState() != null && result.getState().isFeasible();
+            feasible = result.getState() != null && result.getState().isFeasible(); // 'result != null' entfernen
         } catch (Throwable t) {
             feasible = false;
             result = null;
@@ -88,7 +94,8 @@ public final class OjAlgoSolver implements LPSolverAdapter {
                 try {
                     final Number num = ov.getValue();
                     if (num != null) val = num.doubleValue();
-                } catch (Throwable ignored) {}
+                } catch (Throwable ignored) {
+                }
             }
             values.put(v.getName(), val);
         }

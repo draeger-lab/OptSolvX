@@ -209,6 +209,12 @@ public class AbstractLPModel {
         this.direction = direction;
     }
 
+    /** Fluent builder: set optimization direction and return this. */
+    public AbstractLPModel direction(OptimizationDirection dir) {
+        setDirection(dir);
+        return this;
+    }
+
     /**
      * @return true if build() has been called and the model is finalized
      */
