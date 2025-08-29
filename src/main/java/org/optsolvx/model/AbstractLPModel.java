@@ -179,7 +179,6 @@ public class AbstractLPModel {
         Integer idx = variableIndices.get(name);
         if (idx == null) throw new IllegalArgumentException("No such variable: " + name);
         return variables.get(idx);
-
     }
 
     /**

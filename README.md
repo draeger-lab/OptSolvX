@@ -14,7 +14,8 @@ Place for licenses, java links and passings. Inspired and copied from SBSCL and 
 ![Code Size](https://img.shields.io/github/languages/code-size/draeger-lab/OptSolvX.svg?style=plastic)
 ![Downloads of all releases](https://img.shields.io/github/downloads/draeger-lab/OptSolvX/total.svg?style=plastic)
 
-OptSolvX is a flexible Java library for solving linear programming (LP) problems with multiple interchangeable solver backends.  
+OptSolvX is a flexible Java library for solving linear programming (LP) problems with multiple interchangeable solver
+backends.  
 It provides a clean, test-driven API for building, comparing and extending LP solvers.  
 OptSolvX is intended for applications in mathematics, research, and systems biology.
 
@@ -29,7 +30,6 @@ OptSolvX is intended for applications in mathematics, research, and systems biol
 - Clean logging & validation (build checks, bounds, relations)
 - Easy to extend with custom backends; demo included
 
-
 ► Status
 ----------------------------
 
@@ -37,11 +37,10 @@ OptSolvX is intended for applications in mathematics, research, and systems biol
 - Backends: Commons Math adapter ready; ojAlgo adapter planned
 - Builds: Java 22 by default; optional Java 8 bytecode via compat8 profile (classifier jdk8)
 
-
 ► Installation
 ----------------------------
 
-Requirements: Maven ≥ 3.9, Java 22 (default). 
+Requirements: Maven ≥ 3.9, Java 22 (default).
 
 Optional: build an additional Java 8 bytecode artifact via profile compat8.
 
@@ -51,19 +50,21 @@ cd OptSolvX
 ```
 
 Default (Java 22) - installs to local Maven repo
+
 ```
 mvn clean install
 ```
 
 Optional: Java 8 bytecode JAR (classifier jdk8)
+
 ```
 mvn -P compat8 -DskipTests clean package
 ```
 
 Artifacts
+
 - target/optsolvx-<version>.jar - Java 22 (default)
 - target/optsolvx-<version>-jdk8.jar - Java 8 bytecode (compatibility)
-
 
 ► Testing
 ----------------------------
@@ -97,6 +98,7 @@ Run the built-in demo (max x + y with two constraints) using the Commons Math ba
 **From IDE:** run `org.optsolvx.solver.SolverDemo`.
 
 **From Maven (CLI):**
+
 ```bash
 mvn -q exec:java
 # If needed:
@@ -104,6 +106,7 @@ mvn -q exec:java
 ```
 
 Expected Output:
+
 ```bash
 Variable values: {x=3.0, y=0.5}
 Objective: 3.5
@@ -111,6 +114,7 @@ Feasible:  true
 ```
 
 ***Optional debug:*** enable verbose model logging in the demo:
+
 ```java
 model.setDebug(true); // call before model.build()
 ```
