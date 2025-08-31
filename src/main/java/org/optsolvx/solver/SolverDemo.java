@@ -1,6 +1,7 @@
 package org.optsolvx.solver;
 
 import org.optsolvx.model.*;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 

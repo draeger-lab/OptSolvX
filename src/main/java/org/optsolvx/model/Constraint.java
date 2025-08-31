@@ -1,30 +1,35 @@
 package org.optsolvx.model;
 
 import org.apache.commons.math3.optim.linear.Relationship;
+
 import java.util.Collections;
 import java.util.Map;
 
 /**
  * Represents a single linear constraint in the LP model.
- * <p>
  * Stores a map from variable names to their coefficients,
  * the constraint relationship (≤, ≥ or =) and the right-hand side value.
  * The index of a constraint is managed by the parent LP model class (AbstractLPModel),
  * not by this object.
- * </p>
  */
 public class Constraint {
-    /** Unique, user-defined name of this constraint. */
+    /**
+     * Unique, user-defined name of this constraint.
+     */
     private final String name;
 
-    public enum Relation { LEQ, GEQ, EQ }
+    public enum Relation {LEQ, GEQ, EQ}
 
-    /** Immutable map of variable names to their coefficients. */
+    /**
+     * Immutable map of variable names to their coefficients.
+     */
     private final Map<String, Double> coefficients;
 
     private final Relation relation;
 
-    /** Right-hand side value of the constraint. */
+    /**
+     * Right-hand side value of the constraint.
+     */
     private final double rhs;
 
 
@@ -75,6 +80,7 @@ public class Constraint {
 
     /**
      * Returns the internal relation type (LEQ, GEQ, EQ).
+     *
      * @return constraint relation enum
      */
     public Relation getRelation() {
@@ -83,6 +89,7 @@ public class Constraint {
 
     /**
      * Returns the right-hand side value (alternative getter).
+     *
      * @return right-hand side value
      */
     public double getRightHandSide() {
