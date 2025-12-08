@@ -34,20 +34,20 @@ Requirements: Maven ≥ 3.9, Java 22 (default).
 
 Optional: build an additional Java 8 bytecode artifact via profile compat8.
 
-```
+```bash
 git clone https://github.com/draeger-lab/OptSolvX.git
 cd OptSolvX
 ```
 
 Default (Java 22) - installs to local Maven repo
 
-```
+```bash
 mvn clean install
 ```
 
 Optional: Java 8 bytecode JAR (classifier jdk8)
 
-```
+```bash
 mvn -P compat8 -DskipTests clean package
 ```
 
@@ -75,7 +75,7 @@ Biological and advanced tests (e.g., with SBML) will be added in the future unde
 
 Run all tests with:
 
-```
+```bash
 mvn test
 ```
 
@@ -122,7 +122,4 @@ model.setDebug(true); // call before model.build()
 ► Contribution
 ----------------------------
 
-Contributions and feedback are welcome! Please open issues or pull requests on GitHub.
-
----
-*State of this README as of: 20.08.25*
+Contributions and feedback are welcome! Please open issues or pull requests on this Repository.
