@@ -19,15 +19,15 @@ public final class SolverDemo {
         obj.put("y", 1.0d);
         model.setObjective(obj, OptimizationDirection.MAXIMIZE);
 
-        // Constraints
-        Map<String, Double> c1 = new LinkedHashMap<String, Double>();
+        // c1: x + 2y <= 4
+        Map<String, Double> c1 = new LinkedHashMap<>();
         c1.put("x", 1.0d);
         c1.put("y", 2.0d);
         model.addConstraint("c1", c1, Constraint.Relation.LEQ, 4.0d);
 
-        Map<String, Double> c2 = new LinkedHashMap<String, Double>();
+        // c2: x <= 3
+        Map<String, Double> c2 = new LinkedHashMap<>();
         c2.put("x", 1.0d);
-        c2.put("y", 1.0d);
         model.addConstraint("c2", c2, Constraint.Relation.LEQ, 3.0d);
 
         // 2) Finalize model
