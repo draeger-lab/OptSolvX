@@ -64,6 +64,37 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+
+                <!-- Enables: mvn enforcer:enforce -->
+                <configuration>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>[22,)</version>
+                            <message>
+                                OptSolvX requires JDK 22 or newer to build. The code is compiled with --release 22 for consistent bytecode.
+                            </message>
+                        </requireJavaVersion>
+                    </rules>
+                    <fail>true</fail>
+                </configuration>
+
+                <!-- Keeps it bound to 'validate' as well -->
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
