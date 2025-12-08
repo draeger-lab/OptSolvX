@@ -79,7 +79,7 @@ public final class OjAlgoSolver implements LPSolverAdapter {
         Optimisation.Result result;
         try {
             result = ebm.minimise(); // weight handles MAX
-            feasible = result.getState() != null && result.getState().isFeasible(); // 'result != null' entfernen
+            feasible = result.getState() != null && result.getState().isFeasible();
         } catch (Throwable t) {
             feasible = false;
             result = null;
