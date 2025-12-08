@@ -1,15 +1,5 @@
 # OptSolvX
 
-<!--
-
-Place for licenses, java links and passings. Inspired and copied from SBSCL and JSBML as an example
-
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-22-blue?logo=java&logoColor=white)](https://adoptium.net/de/temurin/releases/)
-[![Build](https://github.com/draeger-lab/OptSolvX/actions/workflows/ci.yml/badge.svg)](https://github.com/draeger-lab/OptSolvX/actions)
-
--->
-
 [![License (MIT)](https://img.shields.io/badge/license-MIT-blue.svg?style=plastic)](http://opensource.org/licenses/MIT)
 ![Code Size](https://img.shields.io/github/languages/code-size/draeger-lab/OptSolvX.svg?style=plastic)
 ![Downloads of all releases](https://img.shields.io/github/downloads/draeger-lab/OptSolvX/total.svg?style=plastic)
