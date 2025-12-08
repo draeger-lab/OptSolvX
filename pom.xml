@@ -74,9 +74,9 @@
                 <configuration>
                     <rules>
                         <requireJavaVersion>
-                            <version>[22,23)</version>
+                            <version>[22,)</version>
                             <message>
-                                OptSolvX requires JDK 22 to build. Set JAVA_HOME to 22.x or use toolchains.
+                                OptSolvX requires JDK 22 or newer to build. The code is compiled with --release 22 for consistent bytecode.
                             </message>
                         </requireJavaVersion>
                     </rules>
