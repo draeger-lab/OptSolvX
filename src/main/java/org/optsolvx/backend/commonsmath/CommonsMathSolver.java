@@ -1,4 +1,4 @@
-package org.optsolvx.solver;
+package org.optsolvx.backend.commonsmath;
 
 import org.optsolvx.model.AbstractLPModel;
 import org.optsolvx.model.Variable;
@@ -15,9 +15,8 @@ import org.apache.commons.math3.optim.linear.NonNegativeConstraint;
 import org.apache.commons.math3.optim.linear.Relationship;
 import org.apache.commons.math3.optim.linear.SimplexSolver;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
-import org.apache.commons.math3.optim.univariate.SearchInterval;
-import org.apache.commons.math3.exception.MathIllegalStateException;
-import org.apache.commons.math3.optim.OptimizationData;
+import org.optsolvx.solver.LPSolution;
+import org.optsolvx.solver.LPSolverAdapter;
 
 import java.util.*;
 

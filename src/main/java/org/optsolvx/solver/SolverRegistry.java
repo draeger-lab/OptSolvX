@@ -1,5 +1,8 @@
 package org.optsolvx.solver;
 
+import org.optsolvx.backend.commonsmath.CommonsMathSolver;
+import org.optsolvx.backend.ojalgo.OjAlgoSolver;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;

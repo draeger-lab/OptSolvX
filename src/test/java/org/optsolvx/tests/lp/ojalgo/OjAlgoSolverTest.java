@@ -1,7 +1,8 @@
-package org.optsolvx.tests.lp;
+package org.optsolvx.tests.lp.ojalgo;
 
 import org.optsolvx.solver.LPSolverAdapter;
-import org.optsolvx.solver.OjAlgoSolver;
+import org.optsolvx.backend.ojalgo.OjAlgoSolver;
+import org.optsolvx.tests.lp.BaseLPSolverTest;
 
 public class OjAlgoSolverTest extends BaseLPSolverTest {
     @Override

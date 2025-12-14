@@ -1,6 +1,9 @@
-package org.optsolvx.solver;
+package org.optsolvx.backend.demo;
 
 import org.optsolvx.model.*;
+import org.optsolvx.solver.LPSolution;
+import org.optsolvx.solver.LPSolverAdapter;
+import org.optsolvx.solver.OptSolvXConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

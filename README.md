@@ -84,14 +84,14 @@ mvn test
 
 Run the built-in demo (max x + y with two constraints) using the OptSolvX backend-selection mechanism.
 
-**From IDE:** run `org.optsolvx.solver.SolverDemo`.
+**From IDE:** run `org.optsolvx.backend.demo.SolverDemo`.
 
 **From Maven (CLI):**
 
 ```bash
 mvn -q exec:java
 # If needed:
-# mvn -q -DskipTests exec:java -Dexec.mainClass=org.optsolvx.solver.SolverDemo
+# mvn -q -DskipTests exec:java -Dexec.mainClass=org.optsolvx.backend.demo.SolverDemo
 ```
 
 By default, the solver is chosen via `OptSolvXConfig` using:

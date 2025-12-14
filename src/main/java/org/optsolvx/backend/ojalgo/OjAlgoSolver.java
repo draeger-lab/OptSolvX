@@ -1,4 +1,4 @@
-package org.optsolvx.solver;
+package org.optsolvx.backend.ojalgo;
 
 import org.optsolvx.model.AbstractLPModel;
 import org.optsolvx.model.Constraint;
@@ -7,6 +7,8 @@ import org.optsolvx.model.OptimizationDirection;
 import org.ojalgo.optimisation.ExpressionsBasedModel;
 import org.ojalgo.optimisation.Expression;
 import org.ojalgo.optimisation.Optimisation;
+import org.optsolvx.solver.LPSolution;
+import org.optsolvx.solver.LPSolverAdapter;
 
 import java.util.LinkedHashMap;
 import java.util.List;
