@@ -124,4 +124,4 @@ model.setDebug(true); // call before model.build()
 ► Contribution
 ----------------------------
 
-Contributions and feedback are welcome! Please open issues or pull requests on this epository.
+Contributions and feedback are welcome! Please open issues or pull requests on this Repository.
