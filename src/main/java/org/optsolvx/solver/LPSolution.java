@@ -14,7 +14,15 @@ public class LPSolution {
         this.feasible = feasible;
     }
 
-    public Map<String, Double> getVariableValues() { return variableValues; }
-    public double getObjectiveValue() { return objectiveValue; }
-    public boolean isFeasible() { return feasible; }
+    public Map<String, Double> getVariableValues() {
+        return variableValues;
+    }
+
+    public double getObjectiveValue() {
+        return objectiveValue;
+    }
+
+    public boolean isFeasible() {
+        return feasible;
+    }
 }

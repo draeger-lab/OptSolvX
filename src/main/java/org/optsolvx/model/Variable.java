@@ -15,7 +15,8 @@ public class Variable {
 
     /**
      * Creates a new variable with the given name and bounds.
-     * @param name unique name
+     *
+     * @param name       unique name
      * @param lowerBound lower bound (inclusive)
      * @param upperBound upper bound (inclusive)
      */
@@ -26,11 +27,19 @@ public class Variable {
     }
 
     // @return variable name
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
+
     // @return lower bound
-    public double getLowerBound() { return lowerBound; }
+    public double getLowerBound() {
+        return lowerBound;
+    }
+
     // @return upper bound
-    public double getUpperBound() { return upperBound; }
+    public double getUpperBound() {
+        return upperBound;
+    }
 
     /**
      * Returns a debug string with variable details.

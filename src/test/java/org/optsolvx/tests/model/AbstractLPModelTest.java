@@ -1,4 +1,4 @@
-package org.optsolvx.tests;
+package org.optsolvx.tests.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

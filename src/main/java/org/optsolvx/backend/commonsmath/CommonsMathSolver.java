@@ -1,4 +1,4 @@
-package org.optsolvx.solver;
+package org.optsolvx.backend.commonsmath;
 
 import org.optsolvx.model.AbstractLPModel;
 import org.optsolvx.model.Variable;
@@ -15,21 +15,19 @@ import org.apache.commons.math3.optim.linear.NonNegativeConstraint;
 import org.apache.commons.math3.optim.linear.Relationship;
 import org.apache.commons.math3.optim.linear.SimplexSolver;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
-import org.apache.commons.math3.optim.univariate.SearchInterval;
-import org.apache.commons.math3.exception.MathIllegalStateException;
-import org.apache.commons.math3.optim.OptimizationData;
+import org.optsolvx.solver.LPSolution;
+import org.optsolvx.solver.LPSolverAdapter;
 
 import java.util.*;
 
 /**
  * Commons Math 3 backend for OptSolvX.
- *
  * Implementation notes:
  * - Equality constraints are represented as two inequalities (<= and >=).
  * - Variable bounds are added explicitly as linear constraints (lb/ub).
  * - NonNegativeConstraint(false) is required to allow negative fluxes.
  * - If the problem is infeasible or unbounded, the solution is marked infeasible
- *   and the objective is reported as NaN to mirror legacy behavior.
+ * and the objective is reported as NaN to mirror legacy behavior.
  */
 public final class CommonsMathSolver implements LPSolverAdapter {
 
