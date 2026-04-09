@@ -26,17 +26,23 @@ public class Variable {
         this.upperBound = upperBound;
     }
 
-    // @return variable name
+    /**
+     * @return variable name
+     */
     public String getName() {
         return name;
     }
 
-    // @return lower bound
+    /**
+     * @return lower bound
+     */
     public double getLowerBound() {
         return lowerBound;
     }
 
-    // @return upper bound
+    /**
+     * @return upper bound
+     */
     public double getUpperBound() {
         return upperBound;
     }

@@ -69,8 +69,9 @@ public class AbstractLPModel {
             if (debug) LOGGER.warning("Duplicate variable name: " + name);
             throw new IllegalArgumentException("Variable name already exists: " + name);
         }
-        if (debug)
+        if (debug) {
             LOGGER.info(format("{0}: Added variable: {1} [{2,number,0.####}, {3,number,0.####}]", getClass().getSimpleName(), name, lower, upper));
+        }
         Variable var = new Variable(name, lower, upper);
         int idx = variables.size();
         variables.add(var);
@@ -95,8 +96,9 @@ public class AbstractLPModel {
             if (debug) LOGGER.warning("Duplicate constraint name: " + name);
             throw new IllegalArgumentException("Constraint name already exists: " + name);
         }
-        if (debug)
+        if (debug) {
             LOGGER.info(format("{0}: Added constraint {1} ({2}) rhs={3, number,0.####}, vars={4}", getClass().getSimpleName(), name, rel, rhs, coeffs.keySet()));
+        }
         Constraint c = new Constraint(name, coeffs, rel, rhs);
         int idx = constraints.size();
         constraints.add(c);
@@ -141,11 +143,13 @@ public class AbstractLPModel {
      */
     public void build() {
         if (built) return;
-        if (debug)
+        if (debug) {
             LOGGER.info(format("{0}: Building model with {1} variables and {2} constraints.", getClass().getSimpleName(), variables.size(), constraints.size()));
+        }
         built = true;
-        if (debug)
+        if (debug) {
             LOGGER.info(format("{0}: Model finalized. No further modifications allowed.", getClass().getSimpleName()));
+        }
     }
 
     /**
@@ -267,14 +271,23 @@ public class AbstractLPModel {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName()).append(":\n");
-        sb.append("Variables:\n");
-        for (Variable v : variables) sb.append("  ").append(v).append("\n");
-        sb.append("Constraints:\n");
-        for (Constraint c : constraints) sb.append("  ").append(c).append("\n");
-        sb.append("Objective: ").append(objectiveCoefficients).append(" direction=").append(direction).append("\n");
-        return sb.toString();
+        StringJoiner variablesJoiner = new StringJoiner("\n  ", "Variables:\n  ", "\n");
+        for (Variable v : variables) {
+            variablesJoiner.add(String.valueOf(v));
+        }
+
+        StringJoiner constraintsJoiner = new StringJoiner("\n  ", "Constraints:\n  ", "\n");
+        for (Constraint c : constraints) {
+            constraintsJoiner.add(String.valueOf(c));
+        }
+
+        return new StringBuilder()
+                .append(getClass().getSimpleName()).append(":\n")
+                .append(variablesJoiner)
+                .append(constraintsJoiner)
+                .append("Objective: ").append(objectiveCoefficients)
+                .append(" direction=").append(direction).append("\n")
+                .toString();
     }
 
     /**

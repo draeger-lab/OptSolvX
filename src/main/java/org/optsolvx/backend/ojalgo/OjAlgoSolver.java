@@ -25,8 +25,12 @@ public final class OjAlgoSolver implements LPSolverAdapter {
 
     @Override
     public LPSolution solve(AbstractLPModel model) {
-        if (model == null) throw new IllegalArgumentException("Model must not be null.");
-        if (!model.isBuilt()) model.build();
+        if (model == null) {
+            throw new IllegalArgumentException("Model must not be null.");
+        }
+        if (!model.isBuilt()) {
+            model.build();
+        }
 
         final List<org.optsolvx.model.Variable> vars = model.getVariables();
         final int n = vars.size();
