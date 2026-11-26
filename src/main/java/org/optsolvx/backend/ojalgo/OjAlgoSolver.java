@@ -37,6 +37,10 @@ public final class OjAlgoSolver implements LPSolverAdapter {
 
         // ----- ojAlgo model -----
         final ExpressionsBasedModel ebm = new ExpressionsBasedModel();
+
+        // Use the legacy LP solver in ojAlgo 55.0.0 to avoid
+        // incorrect infeasibility results for certain LP models.
+        ebm.options.experimental = true;
         final Map<String, org.ojalgo.optimisation.Variable> oj = new LinkedHashMap<>(n);
 
         // Variables + bounds
