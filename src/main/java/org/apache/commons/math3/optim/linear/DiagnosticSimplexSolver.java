@@ -884,7 +884,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
                                 "benchmark.cutoff", "1e-10"))
         );
 
-        
+
         System.out.println("Using Harris v2");
         System.out.println("Block artificial reentry: "
                 + blockArtificial);
