@@ -5,15 +5,20 @@ import org.apache.commons.math3.linear.DecompositionSolver;
 
 import java.util.Locale;
 
-public final class DiagnosticSimplexSolver extends SimplexSolver {
+public final class StabilizedSimplexSolver extends SimplexSolver {
+
+    private static final java.util.logging.Logger SOLVER_LOGGER =
+            java.util.logging.Logger.getLogger(
+                    StabilizedSimplexSolver.class.getName());
+
+    private static final double PIVOT_CUTOFF = 1e-10;
+
 
 
 
     private boolean phase1;
 
 
-    private SimplexTableau observedTableau;
-    private boolean phase2Started;
 
 
 
@@ -36,9 +41,6 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
 
         cleanupArtificialBasis(tableau);
 
-        if (tableau.getNumObjectiveFunctions() == 2) {
-            dumpColumns("PHASE1_CLEANED", tableau);
-        }
 
         final int oldObjectiveRows =
                 tableau.getNumObjectiveFunctions();
@@ -69,10 +71,9 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         }
 
 
-        final boolean retainColumns =
-                !"0".equals(System.getenv("RETAIN_COLUMNS"));
+        final boolean retainColumns = true;
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Retain non-artificial columns: "
                         + retainColumns);
 
@@ -92,7 +93,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
                 tableau.setEntry(0, j, 0.0d);
             }
 
-            System.err.println(
+            SOLVER_LOGGER.fine(
                     "Protected positive-cost columns: "
                             + protectedColumns);
         }
@@ -100,20 +101,15 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         tableau.dropPhase1Objective();
 
 
-        final boolean preserve =
-                !"0".equals(
-                        System.getenv("PRESERVE_PHASE1_BASIS"));
+        final boolean preserve = true;
 
-        System.err.println("Preserve phase 1 basis: " + preserve);
+        SOLVER_LOGGER.fine("Preserve phase 1 basis: " + preserve);
 
         if (preserve && oldObjectiveRows == 2) {
             restoreBasis(tableau, previousBasis);
         }
 
-        observedTableau = tableau;
-        phase2Started = true;
 
-        dumpColumns("PHASE2_START", tableau);
 
 
         final java.util.List<Integer> artificialColumns =
@@ -130,7 +126,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             }
         }
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Restricted Phase 2 artificial columns: "
                         + artificialColumns.size());
 
@@ -167,14 +163,13 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             }
         }
 
-        dumpColumns("PHASE2_FINAL", tableau);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Phase 2 tableau objective: "
                         + tableau.getEntry(
                                 0, tableau.getRhsOffset()));
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Phase 2 returned objective: "
                         + result.getValue());
 
@@ -248,7 +243,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
 
             if (hasFeasiblePhase1Basis(tableau)) {
 
-                System.err.println(
+                SOLVER_LOGGER.fine(
                         "Phase 1 completed with verified zero "
                                 + "artificial variables.");
 
@@ -438,14 +433,14 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             }
         }
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Artificial cleanup pivots: " + removed);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Remaining artificial basis variables: "
                         + remaining);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Maximum remaining non-artificial coefficient: "
                         + maxRemainingCoefficient);
 
@@ -594,7 +589,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             }
         }
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Preserved basis maximum unit residual: "
                         + maximumUnitResidual);
 
@@ -617,251 +612,12 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             rowToColumn[row] = column;
         }
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "Restored basis rows: "
                         + restoredColumns.length);
     }
 
-    private void checkOptimalPoint(
-            String stage,
-            SimplexTableau tableau,
-            java.util.List<?> labels)
-            throws java.io.IOException {
-
-        final String path = System.getenv("TABLEAU_PROBE");
-
-        if (path == null) {
-            return;
-        }
-
-        final java.util.Map<String, Double> values =
-                new java.util.HashMap<>();
-
-        for (String line : java.nio.file.Files.readAllLines(
-                java.nio.file.Paths.get(path))) {
-
-            final String[] parts = line.split("\t");
-
-            values.put(
-                    parts[0],
-                    Double.parseDouble(parts[1]));
-        }
-
-        final int rhsColumn = tableau.getRhsOffset();
-        final double[] candidate = new double[rhsColumn];
-
-        for (int j = 0; j < rhsColumn; j++) {
-
-            final String name = labels.get(j).toString();
-
-            if (name.startsWith("a")) {
-
-                // All artificial variables must be zero.
-                candidate[j] = 0.0d;
-
-            } else {
-
-                final Double value = values.get(name);
-
-                if (value == null) {
-                    throw new IllegalStateException(
-                            "Missing candidate value: " + name);
-                }
-
-                candidate[j] = value;
-            }
-        }
-
-        double maxResidual = 0.0d;
-        double maxRelativeResidual = 0.0d;
-        int worstRow = -1;
-        int violatedRows = 0;
-
-        for (int i = 0; i < tableau.getHeight(); i++) {
-
-            double sum = 0.0d;
-            double compensation = 0.0d;
-            double magnitude = 0.0d;
-
-            // Evaluate the equation using compensated summation.
-            for (int j = 0; j < rhsColumn; j++) {
-
-                final double term =
-                        tableau.getEntry(i, j) * candidate[j];
-
-                final double corrected = term - compensation;
-                final double next = sum + corrected;
-
-                compensation = (next - sum) - corrected;
-                sum = next;
-
-                magnitude += Math.abs(term);
-            }
-
-            final double rhs = tableau.getEntry(i, rhsColumn);
-            final double residual = Math.abs(sum - rhs);
-
-            final double relativeResidual =
-                    residual / Math.max(
-                            1.0d,
-                            magnitude + Math.abs(rhs));
-
-            if (!Double.isFinite(residual)
-                    || !Double.isFinite(relativeResidual)) {
-                throw new IllegalStateException(
-                        "Non-finite tableau residual");
-            }
-
-            if (residual > maxResidual) {
-                maxResidual = residual;
-                worstRow = i;
-            }
-
-            maxRelativeResidual = Math.max(
-                    maxRelativeResidual,
-                    relativeResidual);
-
-            if (residual > 1e-6) {
-                violatedRows++;
-            }
-
-            if (i < tableau.getNumObjectiveFunctions()) {
-
-                System.err.printf(
-                        java.util.Locale.ROOT,
-                        "PROBE %s | objectiveRow=%d"
-                                + " | lhs=%.12e"
-                                + " | rhs=%.12e"
-                                + " | residual=%.12e%n",
-                        stage,
-                        i,
-                        sum,
-                        rhs,
-                        residual);
-            }
-        }
-
-        // Verify the basic-variable mappings.
-        final int[] rowOwners = new int[tableau.getHeight()];
-
-        int basicColumns = 0;
-        int mappingMismatches = 0;
-
-        for (int j = tableau.getNumObjectiveFunctions();
-                j < rhsColumn; j++) {
-
-            final Integer row = tableau.getBasicRow(j);
-
-            if (row == null) {
-                continue;
-            }
-
-            basicColumns++;
-            rowOwners[row]++;
-
-            if (tableau.getBasicVariable(row) != j) {
-                mappingMismatches++;
-            }
-        }
-
-        int missingRows = 0;
-        int duplicateRows = 0;
-
-        for (int i = tableau.getNumObjectiveFunctions();
-                i < tableau.getHeight(); i++) {
-
-            if (rowOwners[i] == 0) {
-                missingRows++;
-            }
-
-            if (rowOwners[i] > 1) {
-                duplicateRows++;
-            }
-        }
-
-        System.err.printf(
-                java.util.Locale.ROOT,
-                "PROBE %s | maxResidual=%.12e"
-                        + " | maxRelativeResidual=%.12e"
-                        + " | worstRow=%d"
-                        + " | violatedRows=%d%n",
-                stage,
-                maxResidual,
-                maxRelativeResidual,
-                worstRow,
-                violatedRows);
-
-        System.err.printf(
-                java.util.Locale.ROOT,
-                "PROBE %s | basicColumns=%d"
-                        + " | missingBasisRows=%d"
-                        + " | duplicateBasisRows=%d"
-                        + " | mappingMismatches=%d%n",
-                stage,
-                basicColumns,
-                missingRows,
-                duplicateRows,
-                mappingMismatches);
-    }
-
-    private void dumpColumns(
-            String stage,
-            SimplexTableau tableau) {
-
-        if (System.getenv("TABLEAU_PROBE") == null) {
-            return;
-        }
-
-
-        try {
-
-            // Read column labels without modifying the tableau.
-            final java.lang.reflect.Field field =
-                    SimplexTableau.class.getDeclaredField(
-                            "columnLabels");
-
-            field.setAccessible(true);
-
-            final java.util.List<?> labels =
-                    (java.util.List<?>) field.get(tableau);
-
-            checkOptimalPoint(stage, tableau, labels);
-
-
-            final int rhsColumn = tableau.getRhsOffset();
-
-            for (int j = tableau.getNumObjectiveFunctions();
-                    j < rhsColumn; j++) {
-
-                final Integer basicRow =
-                        tableau.getBasicRow(j);
-
-                final double basicValue =
-                        basicRow == null
-                                ? 0.0d
-                                : tableau.getEntry(
-                                        basicRow, rhsColumn);
-
-                System.err.printf(
-                        java.util.Locale.ROOT,
-                        "TABLEAU_COLUMN\\t%s\\t%s\\t%.17g\\t%s\\t%.17g%n",
-                        stage,
-                        labels.get(j),
-                        tableau.getEntry(0, j),
-                        basicRow != null,
-                        basicValue);
-            }
-
-        } catch (ReflectiveOperationException | java.io.IOException ex) {
-
-            throw new IllegalStateException(
-                    "Unable to inspect tableau columns.", ex);
-        }
-    }
-
-
-    private final boolean blockArtificial =
-            !"0".equals(System.getenv("BLOCK_ARTIFICIAL"));
+    private static final boolean blockArtificial = true;
 
     private int artificialEntries = 0;
     private int artificialExits = 0;
@@ -875,23 +631,20 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             new java.util.HashSet<>();
 
 
-    public DiagnosticSimplexSolver() {
+    public StabilizedSimplexSolver() {
         super(
                 1e-6,
                 10,
-                Double.parseDouble(
-                        System.getProperty(
-                                "benchmark.cutoff", "1e-10"))
+                PIVOT_CUTOFF
         );
 
 
-        System.out.println("Using Harris v2");
-        System.out.println("Block artificial reentry: "
+        SOLVER_LOGGER.fine("Using Harris v2");
+        SOLVER_LOGGER.fine("Block artificial reentry: "
                 + blockArtificial);
 
-        System.out.println("Pivot cutoff: "
-                + System.getProperty(
-                        "benchmark.cutoff", "1e-10"));
+        SOLVER_LOGGER.fine("Pivot cutoff: "
+                + PIVOT_CUTOFF);
     }
 
     @Override
@@ -899,7 +652,6 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         phase1 = true;
 
         report(tableau, "PHASE 1 START");
-        dumpColumns("PHASE1_START", tableau);
 
         try {
             if (lowerShiftStrategy) {
@@ -912,14 +664,10 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
 
             report(tableau, "PHASE 1 END");
 
-            observedTableau = tableau;
-
-            if (tableau.getNumObjectiveFunctions() == 2) {
-                dumpColumns("PHASE1_FINAL", tableau);
-            }
 
 
-            System.err.println(
+
+            SOLVER_LOGGER.fine(
                     "FINAL PIVOT STATISTICS"
                             + " | artificialEntries="
                             + artificialEntries
@@ -937,13 +685,6 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
     @Override
     protected void doIteration(SimplexTableau tableau) {
 
-        if (tableau.getNumObjectiveFunctions() == 1
-                && observedTableau != null
-                && !phase2Started) {
-
-            phase2Started = true;
-            dumpColumns("PHASE2_START", tableau);
-        }
 
         stableIteration(tableau);
 
@@ -1023,7 +764,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             }
         }
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION captured rows=" + rows);
     }
 
@@ -1211,11 +952,11 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
 
         tableau.setEntry(0, rhsColumn, objectiveRhs);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "DUAL_REPAIR maximumDualViolation="
                         + maximumDualViolation);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "DUAL_REPAIR refreshSeconds="
                         + (System.nanoTime() - start) / 1e9);
 
@@ -1308,7 +1049,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
                     "No admissible dual repair pivot");
         }
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "DUAL_REPAIR pivot="
                         + (dualRepairPivots + 1)
                         + " | leaving="
@@ -1465,7 +1206,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             // Reject materially infeasible basic values.
             if (values[i] < -1e-14) {
 
-                System.err.println(
+                SOLVER_LOGGER.fine(
                         "BASIS_RECONSTRUCTION negative value="
                                 + values[i]);
 
@@ -1493,7 +1234,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             refreshOriginalTableau(
                     tableau, solver, values);
 
-            System.err.println(
+            SOLVER_LOGGER.fine(
                     "DUAL_REPAIR completedPivots="
                             + dualRepairPivots);
         }
@@ -1501,19 +1242,19 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         final double finalResidual = maximumAbsolute(
                 calculateBasisResidual(basis, values));
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION previousResidual="
                         + previousResidual);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION finalResidual="
                         + finalResidual);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION minimumValue="
                         + minimumValue);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION maximumChange="
                         + maximumChange);
 
@@ -1548,15 +1289,15 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         tableau.setEntry(
                 0, rhsColumn, objectiveSign * newObjective);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION objectiveBefore="
                         + oldObjective);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION objectiveAfter="
                         + newObjective);
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "BASIS_RECONSTRUCTION seconds="
                         + (System.nanoTime() - start) / 1e9);
     }
@@ -1564,7 +1305,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
 
     private boolean lowerShiftStrategy;
 
-    public DiagnosticSimplexSolver withLowerShiftStrategy(
+    public StabilizedSimplexSolver withLowerShiftStrategy(
             boolean enabled) {
 
         this.lowerShiftStrategy = enabled;
@@ -1592,7 +1333,6 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         } catch (NoStablePivotException ex) {
 
             if (phase1
-                    || "0".equals(System.getenv("RHS_REPAIR"))
                     || !repairNegativeRhs(tableau)) {
 
                 throw ex;
@@ -1684,7 +1424,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         rhsRepairs++;
         cumulativeRhsCorrection += totalCorrection;
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "RHS_REPAIR"
                         + " | number=" + rhsRepairs
                         + " | iteration=" + getIterations()
@@ -1712,9 +1452,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
 
         final int height = tableau.getHeight();
 
-        final double cutoff = Double.parseDouble(
-                System.getProperty(
-                        "benchmark.cutoff", "1e-10"));
+        final double cutoff = PIVOT_CUTOFF;
 
         final double feasibilityTolerance = 1e-12;
         final double guardTolerance = 1e-11;
@@ -1767,7 +1505,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
 
             if (getIterations() % 1000 == 0) {
 
-                System.err.println(
+                SOLVER_LOGGER.fine(
                         "Pivot statistics"
                                 + " | artificialEntries="
                                 + artificialEntries
@@ -1967,7 +1705,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
                     && (getIterations() < 500
                     || getIterations() % 1000 == 0)) {
 
-                System.err.println(
+                SOLVER_LOGGER.fine(
                         "Alternative pivot selected"
                                 + " | iteration="
                                 + getIterations()
@@ -2024,35 +1762,35 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             }
         }
 
-        System.err.println("PIVOT_REJECTION phase1=" + phase1);
-        System.err.println("PIVOT_REJECTION candidates="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION phase1=" + phase1);
+        SOLVER_LOGGER.fine("PIVOT_REJECTION candidates="
                 + candidates.size());
-        System.err.println("PIVOT_REJECTION noLimit="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION noLimit="
                 + rejectedNoLimit);
-        System.err.println("PIVOT_REJECTION negativeStep="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION negativeStep="
                 + rejectedNegativeStep);
-        System.err.println("PIVOT_REJECTION ratio="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION ratio="
                 + rejectedRatio);
-        System.err.println("PIVOT_REJECTION guard="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION guard="
                 + rejectedGuard);
-        System.err.println("PIVOT_REJECTION nonFinite="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION nonFinite="
                 + rejectedNonFinite);
 
-        System.err.println("PIVOT_REJECTION minimumCurrentRhs="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION minimumCurrentRhs="
                 + minimumCurrentRhs);
-        System.err.println("PIVOT_REJECTION negativeRows="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION negativeRows="
                 + negativeRows);
-        System.err.println("PIVOT_REJECTION minimumRejectedStep="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION minimumRejectedStep="
                 + minimumRejectedStep);
-        System.err.println("PIVOT_REJECTION minimumPredictedRhs="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION minimumPredictedRhs="
                 + minimumPredictedRhs);
-        System.err.println("PIVOT_REJECTION largestRejectedPivot="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION largestRejectedPivot="
                 + largestRejectedPivot);
-        System.err.println("PIVOT_REJECTION maximumCoefficient="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION maximumCoefficient="
                 + maximumCoefficient);
-        System.err.println("PIVOT_REJECTION worstGuardRow="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION worstGuardRow="
                 + worstGuardRow);
-        System.err.println("PIVOT_REJECTION worstGuardColumn="
+        SOLVER_LOGGER.fine("PIVOT_REJECTION worstGuardColumn="
                 + worstGuardColumn);
 
         throw new NoStablePivotException(
@@ -2097,7 +1835,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
         final double reconstructedW = -artificialSum;
         final double objectiveDrift = w - reconstructedW;
 
-        System.err.println(
+        SOLVER_LOGGER.fine(
                 "W consistency: tableau=" + w
                         + ", reconstructed=" + reconstructedW
                         + ", drift=" + objectiveDrift);
@@ -2130,7 +1868,7 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
             }
         }
 
-        System.err.printf(
+        SOLVER_LOGGER.fine(String.format(
                 Locale.ROOT,
                 "%s | iterations=%d | W=%.12e"
                         + " | minReducedCost=%.12e"
@@ -2144,6 +1882,6 @@ public final class DiagnosticSimplexSolver extends SimplexSolver {
                 minimumRhs,
                 negativeRows,
                 negativeRhsSum
-        );
+        ));
     }
 }

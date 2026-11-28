@@ -22,6 +22,11 @@ import java.util.Map;
 
 public final class CommonsMathSolver implements LPSolverAdapter {
 
+    private static final java.util.logging.Logger SOLVER_LOGGER =
+            java.util.logging.Logger.getLogger(
+                    CommonsMathSolver.class.getName());
+
+
     private static final int MAX_ITERS = 50_000;
     private static final double TOL = 1e-6;
 
@@ -44,7 +49,7 @@ public final class CommonsMathSolver implements LPSolverAdapter {
             return first;
         }
 
-        System.out.println(
+        SOLVER_LOGGER.fine(
                 "LP_STRATEGY_RETRY: "
                         + (lowerShiftFirst
                             ? "CENTERED"
@@ -58,7 +63,7 @@ public final class CommonsMathSolver implements LPSolverAdapter {
             final AbstractLPModel model,
             final boolean lowerShift) {
 
-        System.out.println(
+        SOLVER_LOGGER.fine(
                 "LP_STRATEGY: "
                         + (lowerShift
                             ? "LOWER_SHIFT"
@@ -342,17 +347,17 @@ public final class CommonsMathSolver implements LPSolverAdapter {
 
         final int m = widths.size();
 
-        System.out.println("One-sided unbounded roots: "
+        SOLVER_LOGGER.fine("One-sided unbounded roots: "
                 + oneSidedRoots);
 
-        System.out.println("Free roots: " + freeRoots);
+        SOLVER_LOGGER.fine("Free roots: " + freeRoots);
 
-        System.out.println("Presolve passes: " + passes);
-        System.out.println("Original variables: " + n);
-        System.out.println("Derived zero fixes: " + zeroFixes);
-        System.out.println("Merged variables: " + mergedVariables);
-        System.out.println("Fixed root variables: " + fixedRoots);
-        System.out.println("Reduced variables: " + m);
+        SOLVER_LOGGER.fine("Presolve passes: " + passes);
+        SOLVER_LOGGER.fine("Original variables: " + n);
+        SOLVER_LOGGER.fine("Derived zero fixes: " + zeroFixes);
+        SOLVER_LOGGER.fine("Merged variables: " + mergedVariables);
+        SOLVER_LOGGER.fine("Fixed root variables: " + fixedRoots);
+        SOLVER_LOGGER.fine("Reduced variables: " + m);
 
 
 
@@ -388,10 +393,10 @@ public final class CommonsMathSolver implements LPSolverAdapter {
             maximumScale = Math.max(maximumScale, scale);
         }
 
-        System.out.println("Minimum column scale: "
+        SOLVER_LOGGER.fine("Minimum column scale: "
                 + minimumScale);
 
-        System.out.println("Maximum column scale: "
+        SOLVER_LOGGER.fine("Maximum column scale: "
                 + maximumScale);
 
         final double[] objective = new double[m];
@@ -567,13 +572,13 @@ public final class CommonsMathSolver implements LPSolverAdapter {
 
         }
 
-        System.out.println("Original model constraints: "
+        SOLVER_LOGGER.fine("Original model constraints: "
                 + model.getConstraints().size());
 
-        System.out.println("Removed model constraints: "
+        SOLVER_LOGGER.fine("Removed model constraints: "
                 + removedRows);
 
-        System.out.println("Reduced model constraints: "
+        SOLVER_LOGGER.fine("Reduced model constraints: "
                 + constraints.size());
 
 
@@ -602,123 +607,7 @@ public final class CommonsMathSolver implements LPSolverAdapter {
         }
 
 
-        // Export the exact transformed LP for independent validation.
-        final String exportPath = System.getenv("LP_EXPORT");
-
-        if (exportPath != null && m > 0) {
-
-            try (java.io.PrintWriter out = new java.io.PrintWriter(
-                    java.nio.file.Files.newBufferedWriter(
-                            java.nio.file.Paths.get(exportPath)))) {
-
-                java.util.function.Consumer<double[]> writeTerms =
-                        coefficients -> {
-
-                    int count = 0;
-
-                    for (int j = 0; j < coefficients.length; j++) {
-
-                        final double value = coefficients[j];
-
-                        if (value == 0.0d) {
-                            continue;
-                        }
-
-                        if (count > 0 && count % 8 == 0) {
-                            out.println();
-                        }
-
-                        out.print(value < 0.0d ? " - " : " + ");
-                        out.print(Math.abs(value));
-                        out.print(" x" + j);
-
-                        count++;
-                    }
-
-                    if (count == 0) {
-                        out.print(" + 0 x0");
-                    }
-                };
-
-                out.println(
-                        model.getDirection().name().equals("MAXIMIZE")
-                                ? "Maximize" : "Minimize");
-
-                out.print(" obj:");
-                writeTerms.accept(objective);
-                out.println();
-
-                out.println("Subject To");
-
-                int rowNumber = 0;
-
-                for (LinearConstraint constraint : constraints) {
-
-                    out.print(" c" + rowNumber++ + ":");
-
-                    writeTerms.accept(
-                            constraint.getCoefficients().toArray());
-
-                    switch (constraint.getRelationship()) {
-                        case EQ:
-                            out.print(" = ");
-                            break;
-                        case LEQ:
-                            out.print(" <= ");
-                            break;
-                        case GEQ:
-                            out.print(" >= ");
-                            break;
-                        default:
-                            throw new IllegalStateException(
-                                    "Unknown relationship.");
-                    }
-
-                    out.println(constraint.getValue());
-                }
-
-                out.println("Bounds");
-
-                for (int j = 0; j < m; j++) {
-                    out.println(" 0 <= x" + j);
-                }
-
-                out.println("End");
-
-                if (out.checkError()) {
-                    throw new java.io.IOException("LP export failed.");
-                }
-
-                // Preserve the objective constant introduced by shifting.
-                double objectiveOffset = 0.0d;
-
-                for (Map.Entry<String, Double> e
-                        : model.getObjectiveCoefficients().entrySet()) {
-
-                    final int i =
-                            model.getVariableIndex(e.getKey());
-
-                    objectiveOffset += e.getValue()
-                            * sign[i] * offsets[root[i]];
-                }
-
-                java.nio.file.Files.write(
-                        java.nio.file.Paths.get(exportPath + ".offset"),
-                        java.util.Collections.singletonList(
-                                Double.toString(objectiveOffset)));
-
-                System.out.println("Exported transformed LP: "
-                        + exportPath);
-
-                System.out.println("Objective offset: "
-                        + objectiveOffset);
-
-            } catch (java.io.IOException ex) {
-                throw new java.io.UncheckedIOException(ex);
-            }
-        }
-
-        System.out.println("Total solver constraints: "
+        SOLVER_LOGGER.fine("Total solver constraints: "
                 + constraints.size());
 
         final GoalType goal =
@@ -727,10 +616,10 @@ public final class CommonsMathSolver implements LPSolverAdapter {
                         : GoalType.MINIMIZE;
 
 
-        final SimplexSolver solver = new DiagnosticSimplexSolver()
+        final SimplexSolver solver = new StabilizedSimplexSolver()
                 .withLowerShiftStrategy(lowerShift);
 
-        System.out.println(
+        SOLVER_LOGGER.fine(
                 "Using power-of-two row and column scaling");
 
 
@@ -837,15 +726,15 @@ public final class CommonsMathSolver implements LPSolverAdapter {
                 }
             }
 
-            System.out.println("Iterations: "
+            SOLVER_LOGGER.fine("Iterations: "
                     + solver.getIterations());
 
-            System.out.println("Objective: " + objectiveValue);
+            SOLVER_LOGGER.fine("Objective: " + objectiveValue);
 
-            System.out.println("Maximum bound violation: "
+            SOLVER_LOGGER.fine("Maximum bound violation: "
                     + boundViolation);
 
-            System.out.println("Maximum constraint violation: "
+            SOLVER_LOGGER.fine("Maximum constraint violation: "
                     + constraintViolation);
 
             if (!Double.isFinite(objectiveValue)
@@ -860,10 +749,11 @@ public final class CommonsMathSolver implements LPSolverAdapter {
                     values, objectiveValue, true);
 
         } catch (Exception ex) {
-            System.err.println("Iterations: "
+            SOLVER_LOGGER.fine("Iterations: "
                     + solver.getIterations());
 
-            ex.printStackTrace(System.err);
+            SOLVER_LOGGER.log(java.util.logging.Level.FINE,
+                    ex.toString(), ex);
 
             return failedSolution(vars);
         }
